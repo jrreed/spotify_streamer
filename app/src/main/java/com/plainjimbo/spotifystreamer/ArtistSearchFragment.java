@@ -8,8 +8,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 
 /**
@@ -25,6 +29,7 @@ public class ArtistSearchFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_artist_search, container, false);
         initSearchField(rootView);
+        initArtistList(rootView);
         return rootView;
     }
 
@@ -40,6 +45,25 @@ public class ArtistSearchFragment extends Fragment {
                 return handled;
             }
         });
+    }
+
+    private void initArtistList(View rootView) {
+        ListView artistListView = (ListView)rootView.findViewById(R.id.artist_search_list_view);
+        ArtistListAdapter artistAdapter = new ArtistListAdapter(getActivity(), getArtistList());
+        artistListView.setAdapter(artistAdapter);
+    }
+
+    private ArrayList<HashMap<String,Object>> getArtistList() {
+        ArrayList<HashMap<String,Object>> artistList = new ArrayList<HashMap<String,Object>>();
+        addArtist(artistList, "James Reed", R.mipmap.ic_launcher);
+        return artistList;
+    }
+
+    private void addArtist(ArrayList artistList, String name, int imageResource) {
+        HashMap<String,Object> artist =  new HashMap<String,Object>();
+        artist.put("name", name);
+        artist.put("image", imageResource);
+        artistList.add(artist);
     }
 
     private void makeToast(String text) {
