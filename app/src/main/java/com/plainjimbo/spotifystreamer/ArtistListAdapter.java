@@ -9,7 +9,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * This class serves as an Adapter that can be used to render Artist information in a ListView.
@@ -17,18 +16,15 @@ import java.util.List;
  */
 public class ArtistListAdapter extends ArrayAdapter<HashMap<String,Object>> {
     public static final int ARTIST_LAYOUT = R.layout.list_item_artist;
-    private List<HashMap<String,Object>> mArtistList;
 
-    public ArtistListAdapter(Context context, List<HashMap<String,Object>> artists) {
-        super(context, ARTIST_LAYOUT, artists);
-        mArtistList = artists;
+    public ArtistListAdapter(Context context) {
+        super(context, ARTIST_LAYOUT);
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View view = convertView;
-        HashMap<String,Object> artistMap = mArtistList.get(position);
-
+        HashMap<String,Object> artistMap = getItem(position);
         if (view == null) {
             view = LayoutInflater.from(getContext()).inflate(ARTIST_LAYOUT, null);
         }
