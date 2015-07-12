@@ -8,9 +8,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,7 +21,7 @@ import java.util.HashMap;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class ArtistSearchFragment extends Fragment implements TextView.OnEditorActionListener {
+public class ArtistSearchFragment extends Fragment implements TextView.OnEditorActionListener, AdapterView.OnItemClickListener {
 
     private ArtistListAdapter mArtistListAdapter = null;
 
@@ -44,6 +46,12 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
         return handled;
     }
 
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        HashMap<String, Object> artist = mArtistListAdapter.getItem(position);
+        Toast.makeText(getActivity(), (String)artist.get("name"), Toast.LENGTH_SHORT).show();
+    }
+
     private void initSearchField(View rootView) {
         EditText searchField = (EditText)rootView.findViewById(R.id.artist_search_edit_text);
         searchField.setOnEditorActionListener(this);
@@ -53,6 +61,7 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
         ListView artistListView = (ListView)rootView.findViewById(R.id.artist_search_list_view);
         mArtistListAdapter = new ArtistListAdapter(getActivity());
         artistListView.setAdapter(mArtistListAdapter);
+        artistListView.setOnItemClickListener(this);
     }
 
     private class ArtistSearchTask extends AsyncTask<String, Void, ArrayList<HashMap<String,Object>>> {
