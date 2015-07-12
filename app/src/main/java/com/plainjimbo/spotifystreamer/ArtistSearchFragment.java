@@ -42,7 +42,6 @@ public class ArtistSearchFragment extends Fragment {
                 boolean handled = false;
                 if (action == EditorInfo.IME_ACTION_SEARCH) {
                     new ArtistSearchTask().execute(view.getText().toString());
-                    handled = true;
                 }
                 return handled;
             }
