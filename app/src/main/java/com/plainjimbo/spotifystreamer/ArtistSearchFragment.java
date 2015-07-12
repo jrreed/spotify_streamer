@@ -30,11 +30,12 @@ import retrofit.RetrofitError;
  * A placeholder fragment containing a simple view.
  */
 public class ArtistSearchFragment extends Fragment implements TextView.OnEditorActionListener, AdapterView.OnItemClickListener {
-
+    private static final String BUNDLE_ARTIST_LIST = "artistList";
+    private static final String BUNDLE_RETRY_QUERY = "retrySearch";
     private ArtistListAdapter mArtistListAdapter = null;
     private Toast mCurrentToast = null;
-
-    private static final String BUNDLE_ARTIST_LIST = "artistList";
+    private ArtistSearchTask mCurrentTask = null;
+    private String mRetryQuery = null;
 
     public ArtistSearchFragment() {
     }
@@ -43,8 +44,12 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ArrayList<ArtistListItem> artistList = null;
-        if (savedInstanceState != null && savedInstanceState.containsKey(BUNDLE_ARTIST_LIST) ) {
-            artistList = savedInstanceState.getParcelableArrayList(BUNDLE_ARTIST_LIST);
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey(BUNDLE_RETRY_QUERY)) {
+                mRetryQuery = savedInstanceState.getString(BUNDLE_RETRY_QUERY);
+            } else if (savedInstanceState.containsKey(BUNDLE_ARTIST_LIST) ) {
+                artistList = savedInstanceState.getParcelableArrayList(BUNDLE_ARTIST_LIST);
+            }
         }
         initArtistListAdapter(artistList);
     }
@@ -55,22 +60,39 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
         View rootView = inflater.inflate(R.layout.fragment_artist_search, container, false);
         initSearchField(rootView);
         initArtistListView(rootView);
+        executeSearch(mRetryQuery);
         return rootView;
     }
 
     @Override public void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
-        savedInstanceState.putParcelableArrayList(BUNDLE_ARTIST_LIST, mArtistListAdapter.getArtistList());
+        // If we have a current task then we weren't able to finish it. We have to cancel it so that
+        // it doesn't try to post back to the UI of an Activity that has been destroyed. We save the
+        // query to the bundle so that the Fragment can kick off a new search task on restart.
+        if (mCurrentTask != null) {
+            mCurrentTask.cancel(true);
+            EditText searchField = (EditText) getView().findViewById(R.id.artist_search_edit_text);
+            savedInstanceState.putString(BUNDLE_RETRY_QUERY, searchField.getText().toString());
+        } else {
+            savedInstanceState.putParcelableArrayList(BUNDLE_ARTIST_LIST, mArtistListAdapter.getArtistList());
+        }
     }
 
     @Override
     public boolean onEditorAction(TextView view, int action, KeyEvent event) {
         boolean handled = false;
         if (action == EditorInfo.IME_ACTION_SEARCH) {
-            mArtistListAdapter.clear();
-            new ArtistSearchTask().execute(view.getText().toString());
+            executeSearch(view.getText().toString());
         }
         return handled;
+    }
+
+    private void executeSearch(String query) {
+        if (query != null && query.length() > 0) {
+            mArtistListAdapter.clear();
+            mCurrentTask = new ArtistSearchTask();
+            mCurrentTask.execute(query);
+        }
     }
 
     @Override
@@ -132,6 +154,7 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
                     mArtistListAdapter.notifyDataSetChanged();
                 }
             }
+            mCurrentTask = null;
         }
 
         private Pager<Artist> getArtistList(String query) {

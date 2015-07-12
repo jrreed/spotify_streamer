@@ -29,6 +29,7 @@ public class ArtistTrackListFragment extends Fragment {
     private static final String BUNDLE_TRACK_LIST = "trackList";
     private TrackListAdapter mTrackListAdapter = null;
     private Toast mCurrentToast = null;
+    private TrackListFetchTask mCurrentTask = null;
 
     public ArtistTrackListFragment() {
     }
@@ -54,7 +55,15 @@ public class ArtistTrackListFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
-        savedInstanceState.putParcelableArrayList(BUNDLE_TRACK_LIST, mTrackListAdapter.getTrackList());
+        // If we have a current task then we weren't able to finish it. We have to cancel it so that
+        // it doesn't try to post back to the UI of an Activity that has been destroyed. We don't
+        // save any data to the bundle because the task didn't finish. We'll try to kick off the
+        // task again in `onCreate(...)` if there isn't any data.
+        if (mCurrentTask != null) {
+            mCurrentTask.cancel(true);
+        } else {
+            savedInstanceState.putParcelableArrayList(BUNDLE_TRACK_LIST, mTrackListAdapter.getTrackList());
+        }
     }
 
     private void initTrackListView(View rootView) {
@@ -67,7 +76,8 @@ public class ArtistTrackListFragment extends Fragment {
             mTrackListAdapter = new TrackListAdapter(getActivity());
             Intent intent = getActivity().getIntent();
             String artist_id = intent.getStringExtra(ARTIST_ID);
-            new TrackListFetchTask().execute(artist_id);
+            mCurrentTask = new TrackListFetchTask();
+            mCurrentTask.execute(artist_id);
         } else {
             mTrackListAdapter = new TrackListAdapter(getActivity(), trackList);
         }
@@ -103,6 +113,7 @@ public class ArtistTrackListFragment extends Fragment {
                     mTrackListAdapter.add(new TrackListItem(track));
                 }
             }
+            mCurrentTask = null;
         }
 
         private List<Track> getTrackList(String artist_id) {
