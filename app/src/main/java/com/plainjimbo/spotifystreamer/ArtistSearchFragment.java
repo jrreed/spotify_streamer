@@ -19,7 +19,7 @@ import java.util.HashMap;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class ArtistSearchFragment extends Fragment {
+public class ArtistSearchFragment extends Fragment implements TextView.OnEditorActionListener {
 
     private ArtistListAdapter mArtistListAdapter = null;
 
@@ -35,17 +35,18 @@ public class ArtistSearchFragment extends Fragment {
         return rootView;
     }
 
+    @Override
+    public boolean onEditorAction(TextView view, int action, KeyEvent event) {
+        boolean handled = false;
+        if (action == EditorInfo.IME_ACTION_SEARCH) {
+            new ArtistSearchTask().execute(view.getText().toString());
+        }
+        return handled;
+    }
+
     private void initSearchField(View rootView) {
         EditText searchField = (EditText)rootView.findViewById(R.id.artist_search_edit_text);
-        searchField.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            public boolean onEditorAction(TextView view, int action, KeyEvent event) {
-                boolean handled = false;
-                if (action == EditorInfo.IME_ACTION_SEARCH) {
-                    new ArtistSearchTask().execute(view.getText().toString());
-                }
-                return handled;
-            }
-        });
+        searchField.setOnEditorActionListener(this);
     }
 
     private void initArtistListAndAdapter(View rootView) {
