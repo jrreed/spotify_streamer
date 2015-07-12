@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,8 +15,12 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import kaaes.spotify.webapi.android.SpotifyApi;
+import kaaes.spotify.webapi.android.SpotifyError;
+import kaaes.spotify.webapi.android.SpotifyService;
+import kaaes.spotify.webapi.android.models.Artist;
+import kaaes.spotify.webapi.android.models.Pager;
+import retrofit.RetrofitError;
 
 
 /**
@@ -48,53 +53,55 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        HashMap<String, Object> artist = mArtistListAdapter.getItem(position);
+        Artist artist = mArtistListAdapter.getItem(position);
         Intent intent = new Intent(getActivity(), ArtistTrackListActivity.class);
-        intent.putExtra("artist", (String)artist.get("name"));
+        intent.putExtra("artist", artist.name);
         startActivity(intent);
     }
 
     private void initSearchField(View rootView) {
-        EditText searchField = (EditText)rootView.findViewById(R.id.artist_search_edit_text);
+        EditText searchField = (EditText) rootView.findViewById(R.id.artist_search_edit_text);
         searchField.setOnEditorActionListener(this);
     }
 
     private void initArtistListAndAdapter(View rootView) {
-        ListView artistListView = (ListView)rootView.findViewById(R.id.artist_search_list_view);
+        ListView artistListView = (ListView) rootView.findViewById(R.id.artist_search_list_view);
         mArtistListAdapter = new ArtistListAdapter(getActivity());
         artistListView.setAdapter(mArtistListAdapter);
         artistListView.setOnItemClickListener(this);
     }
 
-    private class ArtistSearchTask extends AsyncTask<String, Void, ArrayList<HashMap<String,Object>>> {
-        protected ArrayList<HashMap<String,Object>> doInBackground(String... query) {
+    private class ArtistSearchTask extends AsyncTask<String, Void, Pager<Artist>> {
+        private final String LOG_TAG = ArtistSearchTask.class.getSimpleName();
+
+        protected Pager<Artist> doInBackground(String... query) {
             if (query.length == 0) {
                 return null;
             }
-            // TODO execute artist search
             return getArtistList(query[0]);
         }
 
-        protected void onPostExecute(ArrayList<HashMap<String,Object>> artistList) {
-            if (artistList != null) {
-                for(HashMap<String,Object> artist : artistList) {
+        protected void onPostExecute(Pager<Artist> artistPager) {
+            if (artistPager != null) {
+                for (Artist artist : artistPager.items) {
                     mArtistListAdapter.add(artist);
                 }
                 mArtistListAdapter.notifyDataSetChanged();
             }
         }
 
-        private ArrayList<HashMap<String,Object>> getArtistList(String query) {
-            ArrayList<HashMap<String,Object>> artistList = new ArrayList<HashMap<String,Object>>();
-            addArtist(artistList, query, R.mipmap.ic_launcher);
-            return artistList;
-        }
-
-        private void addArtist(ArrayList artistList, String name, int imageResource) {
-            HashMap<String,Object> artist =  new HashMap<String,Object>();
-            artist.put("name", name);
-            artist.put("image", imageResource);
-            artistList.add(artist);
+        private Pager<Artist> getArtistList(String query) {
+            SpotifyApi api = new SpotifyApi();
+            SpotifyService spotify = api.getService();
+            Pager<Artist> artistPager = null;
+            try {
+                artistPager = spotify.searchArtists(query).artists;
+            } catch (RetrofitError error) {
+                SpotifyError spotifyError = SpotifyError.fromRetrofitError(error);
+                Log.e(LOG_TAG, spotifyError.getMessage(), spotifyError);
+                spotifyError.printStackTrace();
+            }
+            return artistPager;
         }
     }
 }
