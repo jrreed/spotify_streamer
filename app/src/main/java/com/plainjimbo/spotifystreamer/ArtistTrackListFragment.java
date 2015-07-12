@@ -1,6 +1,7 @@
 package com.plainjimbo.spotifystreamer;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -36,27 +37,39 @@ public class ArtistTrackListFragment extends Fragment {
         trackListView.setAdapter(mTrackListAdapter);
 
         Intent intent = getActivity().getIntent();
-        initData(intent.getStringExtra("artist"));
+        String artist = intent.getStringExtra("artist");
+        new TrackListFetchTask().execute(artist);
     }
 
-    private void initData(String artist) {
-        for (HashMap<String, Object> track : getTrackList(artist)) {
-            mTrackListAdapter.add(track);
+    private class TrackListFetchTask extends AsyncTask<String, Void, ArrayList<HashMap<String,Object>>> {
+        protected ArrayList<HashMap<String,Object>>  doInBackground(String... artist) {
+            if (artist.length == 0) {
+                return null;
+            }
+            return getTrackList(artist[0]);
         }
-    }
 
-    private ArrayList<HashMap<String, Object>> getTrackList(String artist) {
-        ArrayList<HashMap<String, Object>> trackList = new ArrayList<HashMap<String, Object>>();
-        addTrack(trackList, "track-" + artist, R.mipmap.ic_launcher);
-        return trackList;
-    }
+        protected void onPostExecute(ArrayList<HashMap<String,Object>> trackList) {
+            if (trackList != null) {
+                for (HashMap<String, Object> track : trackList) {
+                    mTrackListAdapter.add(track);
+                }
+            }
+        }
 
-    private void addTrack(ArrayList trackList, String title, int imageResource) {
-        HashMap<String, Object> track = new HashMap<String, Object>();
-        track.put("albumImage", imageResource);
-        track.put("albumTitle", "album-" + title);
-        track.put("title", title);
-        trackList.add(track);
+        private ArrayList<HashMap<String, Object>> getTrackList(String artist) {
+            ArrayList<HashMap<String, Object>> trackList = new ArrayList<HashMap<String, Object>>();
+            addTrack(trackList, "track-" + artist, R.mipmap.ic_launcher);
+            return trackList;
+        }
+
+        private void addTrack(ArrayList trackList, String title, int imageResource) {
+            HashMap<String, Object> track = new HashMap<String, Object>();
+            track.put("albumImage", imageResource);
+            track.put("albumTitle", "album-" + title);
+            track.put("title", title);
+            trackList.add(track);
+        }
     }
 }
 
