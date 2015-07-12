@@ -1,6 +1,7 @@
 package com.plainjimbo.spotifystreamer;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,13 +44,15 @@ public class TrackListAdapter extends ArrayAdapter<Track> {
         OptimalImageFinder imageFinder = new OptimalImageFinder(album.images);
         Image image = imageFinder.closestTo(PREFERRED_IMAGE_DIM);
         if (image != null) {
+            photoImageView.setBackgroundColor(Color.TRANSPARENT);
             Picasso.with(getContext())
                     .load(image.url)
                     .resize(PREFERRED_IMAGE_DIM, PREFERRED_IMAGE_DIM)
-                    .centerCrop()
+                    .centerInside()
                     .into(photoImageView);
         } else {
             photoImageView.setImageDrawable(null);
+            photoImageView.setBackgroundColor(getContext().getResources().getColor(R.color.medium_gray));
         }
     }
 

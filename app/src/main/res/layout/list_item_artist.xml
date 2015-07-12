@@ -13,7 +13,6 @@
         android:layout_height="@dimen/list_item_image_dim"
         android:layout_gravity="center_horizontal"
         android:layout_marginRight="@dimen/activity_horizontal_margin"
-        android:background="@color/medium_gray"
         android:contentDescription="@string/content_description_list_item_artist" />
 
     <TextView
