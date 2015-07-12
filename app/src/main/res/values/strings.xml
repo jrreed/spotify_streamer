@@ -5,5 +5,5 @@
     <string name="content_description_list_item_artist">Artist Photo</string>
     <string name="content_description_list_item_track_album_photo">Album Photo</string>
     <string name="action_settings">Settings</string>
-    <string name="title_activity_artist_track_list">Artist Track List</string>
+    <string name="title_activity_artist_track_list">Top 10 Tracks</string>
 </resources>
