@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +26,7 @@ import retrofit.RetrofitError;
 public class ArtistTrackListFragment extends Fragment {
     public static final String ARTIST_ID = "artist_id";
     private TrackListAdapter mTrackListAdapter = null;
+    private Toast mCurrentToast = null;
 
     public ArtistTrackListFragment() {
     }
@@ -48,6 +50,14 @@ public class ArtistTrackListFragment extends Fragment {
         new TrackListFetchTask().execute(artist_id);
     }
 
+    private void makeToast(String message) {
+        if (mCurrentToast != null) {
+            mCurrentToast.cancel();
+        }
+        mCurrentToast = Toast.makeText(getActivity(), message, Toast.LENGTH_LONG);
+        mCurrentToast.show();
+    }
+
     private class TrackListFetchTask extends AsyncTask<String, Void, List<Track>> {
         private final String LOG_TAG = TrackListFetchTask.class.getSimpleName();
 
@@ -59,7 +69,13 @@ public class ArtistTrackListFragment extends Fragment {
         }
 
         protected void onPostExecute(List<Track> trackList) {
-            if (trackList != null) {
+            if (trackList == null) {
+                makeToast("Sorry, we weren't able to complete your request. Please check your " +
+                          "internet connection and try again.");
+            } else {
+                if (trackList.size() == 0) {
+                    makeToast("There are no tracks available for this artist");
+                }
                 for (Track track : trackList) {
                     mTrackListAdapter.add(track);
                 }

@@ -14,6 +14,7 @@ import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyError;
@@ -29,6 +30,7 @@ import retrofit.RetrofitError;
 public class ArtistSearchFragment extends Fragment implements TextView.OnEditorActionListener, AdapterView.OnItemClickListener {
 
     private ArtistListAdapter mArtistListAdapter = null;
+    private Toast mCurrentToast = null;
 
     public ArtistSearchFragment() {
     }
@@ -71,6 +73,14 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
         artistListView.setOnItemClickListener(this);
     }
 
+    private void makeToast(String message) {
+        if (mCurrentToast != null) {
+            mCurrentToast.cancel();
+        }
+        mCurrentToast = Toast.makeText(getActivity(), message, Toast.LENGTH_LONG);
+        mCurrentToast.show();
+    }
+
     private class ArtistSearchTask extends AsyncTask<String, Void, Pager<Artist>> {
         private final String LOG_TAG = ArtistSearchTask.class.getSimpleName();
 
@@ -82,11 +92,18 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
         }
 
         protected void onPostExecute(Pager<Artist> artistPager) {
-            if (artistPager != null) {
-                for (Artist artist : artistPager.items) {
-                    mArtistListAdapter.add(artist);
+            if (artistPager == null) {
+                makeToast("Sorry, we weren't able to complete your request. Please check your " +
+                        "internet connection and try again.");
+            } else {
+                if (artistPager.items.size() == 0) {
+                    makeToast("Your search did not match any artists");
+                } else {
+                    for (Artist artist : artistPager.items) {
+                        mArtistListAdapter.add(artist);
+                    }
+                    mArtistListAdapter.notifyDataSetChanged();
                 }
-                mArtistListAdapter.notifyDataSetChanged();
             }
         }
 
