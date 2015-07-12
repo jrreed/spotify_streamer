@@ -1,5 +1,6 @@
 package com.plainjimbo.spotifystreamer;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -12,7 +13,6 @@ import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,7 +49,9 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         HashMap<String, Object> artist = mArtistListAdapter.getItem(position);
-        Toast.makeText(getActivity(), (String)artist.get("name"), Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(getActivity(), ArtistTrackListActivity.class);
+        intent.putExtra("artist", (String)artist.get("name"));
+        startActivity(intent);
     }
 
     private void initSearchField(View rootView) {
