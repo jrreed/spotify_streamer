@@ -48,6 +48,7 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
     public boolean onEditorAction(TextView view, int action, KeyEvent event) {
         boolean handled = false;
         if (action == EditorInfo.IME_ACTION_SEARCH) {
+            mArtistListAdapter.clear();
             new ArtistSearchTask().execute(view.getText().toString());
         }
         return handled;
