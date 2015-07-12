@@ -77,7 +77,7 @@ public class ArtistTrackListFragment extends Fragment {
                     makeToast("There are no tracks available for this artist");
                 }
                 for (Track track : trackList) {
-                    mTrackListAdapter.add(track);
+                    mTrackListAdapter.add(new TrackListItem(track));
                 }
             }
         }
