@@ -1,5 +1,6 @@
 package com.plainjimbo.spotifystreamer;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.KeyEvent;
@@ -10,7 +11,6 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,6 +21,8 @@ import java.util.HashMap;
  */
 public class ArtistSearchFragment extends Fragment {
 
+    private ArtistListAdapter mArtistListAdapter = null;
+
     public ArtistSearchFragment() {
     }
 
@@ -29,7 +31,7 @@ public class ArtistSearchFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_artist_search, container, false);
         initSearchField(rootView);
-        initArtistList(rootView);
+        initArtistListAndAdapter(rootView);
         return rootView;
     }
 
@@ -39,7 +41,7 @@ public class ArtistSearchFragment extends Fragment {
             public boolean onEditorAction(TextView view, int action, KeyEvent event) {
                 boolean handled = false;
                 if (action == EditorInfo.IME_ACTION_SEARCH) {
-                    makeToast("Searching for: " + view.getText());
+                    new ArtistSearchTask().execute(view.getText().toString());
                     handled = true;
                 }
                 return handled;
@@ -47,26 +49,41 @@ public class ArtistSearchFragment extends Fragment {
         });
     }
 
-    private void initArtistList(View rootView) {
+    private void initArtistListAndAdapter(View rootView) {
         ListView artistListView = (ListView)rootView.findViewById(R.id.artist_search_list_view);
-        ArtistListAdapter artistAdapter = new ArtistListAdapter(getActivity(), getArtistList());
-        artistListView.setAdapter(artistAdapter);
+        mArtistListAdapter = new ArtistListAdapter(getActivity());
+        artistListView.setAdapter(mArtistListAdapter);
     }
 
-    private ArrayList<HashMap<String,Object>> getArtistList() {
-        ArrayList<HashMap<String,Object>> artistList = new ArrayList<HashMap<String,Object>>();
-        addArtist(artistList, "James Reed", R.mipmap.ic_launcher);
-        return artistList;
-    }
+    private class ArtistSearchTask extends AsyncTask<String, Void, ArrayList<HashMap<String,Object>>> {
+        protected ArrayList<HashMap<String,Object>> doInBackground(String... query) {
+            if (query.length == 0) {
+                return null;
+            }
+            // TODO execute artist search
+            return getArtistList(query[0]);
+        }
 
-    private void addArtist(ArrayList artistList, String name, int imageResource) {
-        HashMap<String,Object> artist =  new HashMap<String,Object>();
-        artist.put("name", name);
-        artist.put("image", imageResource);
-        artistList.add(artist);
-    }
+        protected void onPostExecute(ArrayList<HashMap<String,Object>> artistList) {
+            if (artistList != null) {
+                for(HashMap<String,Object> artist : artistList) {
+                    mArtistListAdapter.add(artist);
+                }
+                mArtistListAdapter.notifyDataSetChanged();
+            }
+        }
 
-    private void makeToast(String text) {
-        Toast.makeText(getActivity(), text, Toast.LENGTH_SHORT).show();
+        private ArrayList<HashMap<String,Object>> getArtistList(String query) {
+            ArrayList<HashMap<String,Object>> artistList = new ArrayList<HashMap<String,Object>>();
+            addArtist(artistList, query, R.mipmap.ic_launcher);
+            return artistList;
+        }
+
+        private void addArtist(ArrayList artistList, String name, int imageResource) {
+            HashMap<String,Object> artist =  new HashMap<String,Object>();
+            artist.put("name", name);
+            artist.put("image", imageResource);
+            artistList.add(artist);
+        }
     }
 }
