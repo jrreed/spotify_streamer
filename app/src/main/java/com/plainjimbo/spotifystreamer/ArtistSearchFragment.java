@@ -16,6 +16,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyError;
 import kaaes.spotify.webapi.android.SpotifyService;
@@ -32,7 +34,19 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
     private ArtistListAdapter mArtistListAdapter = null;
     private Toast mCurrentToast = null;
 
+    private static final String BUNDLE_ARTIST_LIST = "artistList";
+
     public ArtistSearchFragment() {
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        ArrayList<ArtistListItem> artistList = null;
+        if (savedInstanceState != null && savedInstanceState.containsKey(BUNDLE_ARTIST_LIST) ) {
+            artistList = savedInstanceState.getParcelableArrayList(BUNDLE_ARTIST_LIST);
+        }
+        initArtistListAdapter(artistList);
     }
 
     @Override
@@ -40,8 +54,13 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_artist_search, container, false);
         initSearchField(rootView);
-        initArtistListAndAdapter(rootView);
+        initArtistListView(rootView);
         return rootView;
+    }
+
+    @Override public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putParcelableArrayList(BUNDLE_ARTIST_LIST, mArtistListAdapter.getArtistList());
     }
 
     @Override
@@ -56,9 +75,9 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Artist artist = mArtistListAdapter.getItem(position);
+        ArtistListItem artist = mArtistListAdapter.getItem(position);
         Intent intent = new Intent(getActivity(), ArtistTrackListActivity.class);
-        intent.putExtra(ArtistTrackListFragment.ARTIST_ID, artist.id);
+        intent.putExtra(ArtistTrackListFragment.ARTIST_ID, artist.getId());
         startActivity(intent);
     }
 
@@ -67,11 +86,18 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
         searchField.setOnEditorActionListener(this);
     }
 
-    private void initArtistListAndAdapter(View rootView) {
+    private void initArtistListView(View rootView) {
         ListView artistListView = (ListView) rootView.findViewById(R.id.artist_search_list_view);
-        mArtistListAdapter = new ArtistListAdapter(getActivity());
         artistListView.setAdapter(mArtistListAdapter);
         artistListView.setOnItemClickListener(this);
+    }
+
+    private void initArtistListAdapter(ArrayList<ArtistListItem> artistList) {
+        if (artistList == null) {
+            mArtistListAdapter = new ArtistListAdapter(getActivity());
+        } else {
+            mArtistListAdapter = new ArtistListAdapter(getActivity(), artistList);
+        }
     }
 
     private void makeToast(String message) {
@@ -101,7 +127,7 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
                     makeToast("Your search did not match any artists");
                 } else {
                     for (Artist artist : artistPager.items) {
-                        mArtistListAdapter.add(artist);
+                        mArtistListAdapter.add(new ArtistListItem(artist));
                     }
                     mArtistListAdapter.notifyDataSetChanged();
                 }
