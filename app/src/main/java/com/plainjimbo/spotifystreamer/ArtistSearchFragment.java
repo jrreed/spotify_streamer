@@ -55,7 +55,7 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Artist artist = mArtistListAdapter.getItem(position);
         Intent intent = new Intent(getActivity(), ArtistTrackListActivity.class);
-        intent.putExtra("artist", artist.name);
+        intent.putExtra(ArtistTrackListFragment.ARTIST_ID, artist.id);
         startActivity(intent);
     }
 

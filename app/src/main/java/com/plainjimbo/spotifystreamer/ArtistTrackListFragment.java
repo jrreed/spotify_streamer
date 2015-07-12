@@ -4,19 +4,26 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+
+import kaaes.spotify.webapi.android.SpotifyApi;
+import kaaes.spotify.webapi.android.SpotifyError;
+import kaaes.spotify.webapi.android.SpotifyService;
+import kaaes.spotify.webapi.android.models.Track;
+import retrofit.RetrofitError;
 
 /**
  * Created by jamesreed on 7/11/15.
  */
 public class ArtistTrackListFragment extends Fragment {
-
+    public static final String ARTIST_ID = "artist_id";
     private TrackListAdapter mTrackListAdapter = null;
 
     public ArtistTrackListFragment() {
@@ -37,38 +44,42 @@ public class ArtistTrackListFragment extends Fragment {
         trackListView.setAdapter(mTrackListAdapter);
 
         Intent intent = getActivity().getIntent();
-        String artist = intent.getStringExtra("artist");
-        new TrackListFetchTask().execute(artist);
+        String artist_id = intent.getStringExtra("artist_id");
+        new TrackListFetchTask().execute(artist_id);
     }
 
-    private class TrackListFetchTask extends AsyncTask<String, Void, ArrayList<HashMap<String,Object>>> {
-        protected ArrayList<HashMap<String,Object>>  doInBackground(String... artist) {
-            if (artist.length == 0) {
+    private class TrackListFetchTask extends AsyncTask<String, Void, List<Track>> {
+        private final String LOG_TAG = TrackListFetchTask.class.getSimpleName();
+
+        protected List<Track> doInBackground(String... artist_ids) {
+            if (artist_ids.length == 0) {
                 return null;
             }
-            return getTrackList(artist[0]);
+            return getTrackList(artist_ids[0]);
         }
 
-        protected void onPostExecute(ArrayList<HashMap<String,Object>> trackList) {
+        protected void onPostExecute(List<Track> trackList) {
             if (trackList != null) {
-                for (HashMap<String, Object> track : trackList) {
+                for (Track track : trackList) {
                     mTrackListAdapter.add(track);
                 }
             }
         }
 
-        private ArrayList<HashMap<String, Object>> getTrackList(String artist) {
-            ArrayList<HashMap<String, Object>> trackList = new ArrayList<HashMap<String, Object>>();
-            addTrack(trackList, "track-" + artist, R.mipmap.ic_launcher);
+        private List<Track> getTrackList(String artist_id) {
+            SpotifyApi api = new SpotifyApi();
+            SpotifyService spotify = api.getService();
+            HashMap<String, Object> queryParams = new HashMap<String, Object>();
+            queryParams.put("country", "US");
+            List<Track> trackList = null;
+            try {
+                trackList = spotify.getArtistTopTrack(artist_id, queryParams).tracks;
+            } catch (RetrofitError error) {
+                SpotifyError spotifyError = SpotifyError.fromRetrofitError(error);
+                Log.e(LOG_TAG, spotifyError.getMessage(), spotifyError);
+                spotifyError.printStackTrace();
+            }
             return trackList;
-        }
-
-        private void addTrack(ArrayList trackList, String title, int imageResource) {
-            HashMap<String, Object> track = new HashMap<String, Object>();
-            track.put("albumImage", imageResource);
-            track.put("albumTitle", "album-" + title);
-            track.put("title", title);
-            trackList.add(track);
         }
     }
 }
