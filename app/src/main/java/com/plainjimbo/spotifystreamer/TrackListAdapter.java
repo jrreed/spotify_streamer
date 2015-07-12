@@ -11,7 +11,10 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
+
 /**
+ * This class serves as an Adapter that can be used to render TrackListItem data in a ListView.
  * Created by jamesreed on 7/11/15.
  */
 public class TrackListAdapter extends ArrayAdapter<TrackListItem> {
@@ -20,6 +23,19 @@ public class TrackListAdapter extends ArrayAdapter<TrackListItem> {
 
     public TrackListAdapter(Context context) {
         super(context, TRACK_LAYOUT);
+    }
+
+    public TrackListAdapter(Context context, ArrayList<TrackListItem> trackList) {
+        super(context, TRACK_LAYOUT, trackList);
+    }
+
+    public ArrayList<TrackListItem> getTrackList() {
+        int trackCount = getCount();
+        ArrayList<TrackListItem> trackList = new ArrayList<TrackListItem>();
+        for (int index = 0; index < trackCount; index++) {
+            trackList.add(getItem(index));
+        }
+        return trackList;
     }
 
     @Override

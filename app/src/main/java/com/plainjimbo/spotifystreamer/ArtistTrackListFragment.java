@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -24,7 +25,8 @@ import retrofit.RetrofitError;
  * Created by jamesreed on 7/11/15.
  */
 public class ArtistTrackListFragment extends Fragment {
-    public static final String ARTIST_ID = "artist_id";
+    public static final String ARTIST_ID = "artistId";
+    private static final String BUNDLE_TRACK_LIST = "trackList";
     private TrackListAdapter mTrackListAdapter = null;
     private Toast mCurrentToast = null;
 
@@ -32,22 +34,43 @@ public class ArtistTrackListFragment extends Fragment {
     }
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        ArrayList<TrackListItem> trackList = null;
+        if (savedInstanceState != null && savedInstanceState.containsKey(BUNDLE_TRACK_LIST)) {
+            trackList = savedInstanceState.getParcelableArrayList(BUNDLE_TRACK_LIST);
+        }
+        initTrackListAdapter(trackList);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_artist_track_list, container, false);
-        initTrackListAndAdapter(rootView);
-
+        initTrackListView(rootView);
         return rootView;
     }
 
-    private void initTrackListAndAdapter(View rootView) {
-        ListView trackListView = (ListView) rootView.findViewById(R.id.artist_track_list_list_view);
-        mTrackListAdapter = new TrackListAdapter(getActivity());
-        trackListView.setAdapter(mTrackListAdapter);
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putParcelableArrayList(BUNDLE_TRACK_LIST, mTrackListAdapter.getTrackList());
+    }
 
-        Intent intent = getActivity().getIntent();
-        String artist_id = intent.getStringExtra("artist_id");
-        new TrackListFetchTask().execute(artist_id);
+    private void initTrackListView(View rootView) {
+        ListView trackListView = (ListView) rootView.findViewById(R.id.artist_track_list_list_view);
+        trackListView.setAdapter(mTrackListAdapter);
+    }
+
+    private void initTrackListAdapter(ArrayList<TrackListItem> trackList) {
+        if (trackList == null) {
+            mTrackListAdapter = new TrackListAdapter(getActivity());
+            Intent intent = getActivity().getIntent();
+            String artist_id = intent.getStringExtra(ARTIST_ID);
+            new TrackListFetchTask().execute(artist_id);
+        } else {
+            mTrackListAdapter = new TrackListAdapter(getActivity(), trackList);
+        }
     }
 
     private void makeToast(String message) {
