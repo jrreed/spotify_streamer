@@ -77,6 +77,6 @@ public class TrackListAdapter extends ArrayAdapter<TrackListItem> {
 
     private void setTrackName(View view, TrackListItem track) {
         TextView trackTextView = (TextView) view.findViewById(R.id.list_item_track_title);
-        trackTextView.setText(track.name);
+        trackTextView.setText(track.getName());
     }
 }
