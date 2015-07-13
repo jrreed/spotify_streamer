@@ -107,11 +107,10 @@ public class ArtistTrackListFragment extends Fragment {
 
         protected void onPostExecute(List<Track> trackList) {
             if (trackList == null) {
-                makeToast("Sorry, we weren't able to complete your request. Please check your " +
-                          "internet connection and try again.");
+                makeToast(getString(R.string.spotify_api_error_message));
             } else {
                 if (trackList.size() == 0) {
-                    makeToast("There are no tracks available for this artist");
+                    makeToast(getString(R.string.empty_search_results_message));
                 }
                 for (Track track : trackList) {
                     mTrackListAdapter.add(new TrackListItem(track));

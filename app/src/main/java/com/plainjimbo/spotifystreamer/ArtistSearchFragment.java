@@ -142,11 +142,10 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
 
         protected void onPostExecute(Pager<Artist> artistPager) {
             if (artistPager == null) {
-                makeToast("Sorry, we weren't able to complete your request. Please check your " +
-                        "internet connection and try again.");
+                makeToast(getString(R.string.spotify_api_error_message));
             } else {
                 if (artistPager.items.size() == 0) {
-                    makeToast("Your search did not match any artists");
+                    makeToast(getString(R.string.empty_search_results_message));
                 } else {
                     for (Artist artist : artistPager.items) {
                         mArtistListAdapter.add(new ArtistListItem(artist));
