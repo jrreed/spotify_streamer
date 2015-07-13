@@ -25,10 +25,10 @@ import retrofit.RetrofitError;
  * Created by jamesreed on 7/11/15.
  */
 public class ArtistTrackListFragment extends Fragment {
-    public static final String ARTIST_ID = "artistId";
     private static final String BUNDLE_TRACK_LIST = "trackList";
-    private TrackListAdapter mTrackListAdapter = null;
+    private ArtistListItem mArtist = null;
     private Toast mCurrentToast = null;
+    private TrackListAdapter mTrackListAdapter = null;
     private TrackListFetchTask mCurrentTask = null;
 
     public ArtistTrackListFragment() {
@@ -37,6 +37,7 @@ public class ArtistTrackListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        initArtist();
         ArrayList<TrackListItem> trackList = null;
         if (savedInstanceState != null && savedInstanceState.containsKey(BUNDLE_TRACK_LIST)) {
             trackList = savedInstanceState.getParcelableArrayList(BUNDLE_TRACK_LIST);
@@ -66,6 +67,11 @@ public class ArtistTrackListFragment extends Fragment {
         }
     }
 
+    private void initArtist() {
+        Intent intent = getActivity().getIntent();
+        mArtist = intent.getParcelableExtra(ArtistTrackListActivity.EXTRA_ARTIST);
+    }
+
     private void initTrackListView(View rootView) {
         ListView trackListView = (ListView) rootView.findViewById(R.id.artist_track_list_list_view);
         trackListView.setAdapter(mTrackListAdapter);
@@ -74,10 +80,8 @@ public class ArtistTrackListFragment extends Fragment {
     private void initTrackListAdapter(ArrayList<TrackListItem> trackList) {
         if (trackList == null) {
             mTrackListAdapter = new TrackListAdapter(getActivity());
-            Intent intent = getActivity().getIntent();
-            String artist_id = intent.getStringExtra(ARTIST_ID);
             mCurrentTask = new TrackListFetchTask();
-            mCurrentTask.execute(artist_id);
+            mCurrentTask.execute(mArtist.getId());
         } else {
             mTrackListAdapter = new TrackListAdapter(getActivity(), trackList);
         }

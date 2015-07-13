@@ -33,9 +33,9 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
     private static final String BUNDLE_ARTIST_LIST = "artistList";
     private static final String BUNDLE_RETRY_QUERY = "retrySearch";
     private ArtistListAdapter mArtistListAdapter = null;
-    private Toast mCurrentToast = null;
     private ArtistSearchTask mCurrentTask = null;
     private String mRetryQuery = null;
+    private Toast mCurrentToast = null;
 
     public ArtistSearchFragment() {
     }
@@ -99,7 +99,7 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         ArtistListItem artist = mArtistListAdapter.getItem(position);
         Intent intent = new Intent(getActivity(), ArtistTrackListActivity.class);
-        intent.putExtra(ArtistTrackListFragment.ARTIST_ID, artist.getId());
+        intent.putExtra(ArtistTrackListActivity.EXTRA_ARTIST, artist);
         startActivity(intent);
     }
 
