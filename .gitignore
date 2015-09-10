@@ -1,4 +1,5 @@
 # Android Studio files
+**/*.iml
 .idea/*
 
 # Built application files
