@@ -26,6 +26,7 @@ import retrofit.RetrofitError;
  */
 public class ArtistTrackListFragment extends Fragment {
     private static final String BUNDLE_TRACK_LIST = "trackList";
+    private static final String BUNDLE_ARTIST = "artist";
     private ArtistListItem mArtist = null;
     private Toast mCurrentToast = null;
     private TrackListAdapter mTrackListAdapter = null;
@@ -39,7 +40,8 @@ public class ArtistTrackListFragment extends Fragment {
         super.onCreate(savedInstanceState);
         initArtist();
         ArrayList<TrackListItem> trackList = null;
-        if (savedInstanceState != null && savedInstanceState.containsKey(BUNDLE_TRACK_LIST)) {
+        if (savedInstanceState != null && savedInstanceState.containsKey(BUNDLE_TRACK_LIST) && savedInstanceState.containsKey(BUNDLE_ARTIST) ) {
+            mArtist = savedInstanceState.getParcelable(BUNDLE_ARTIST);
             trackList = savedInstanceState.getParcelableArrayList(BUNDLE_TRACK_LIST);
         }
         initTrackListAdapter(trackList);
@@ -65,6 +67,7 @@ public class ArtistTrackListFragment extends Fragment {
         } else {
             savedInstanceState.putParcelableArrayList(BUNDLE_TRACK_LIST, mTrackListAdapter.getTrackList());
         }
+        savedInstanceState.putParcelable(BUNDLE_ARTIST, mArtist);
     }
 
     private void initArtist() {
