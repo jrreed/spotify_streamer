@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -24,7 +25,7 @@ import retrofit.RetrofitError;
 /**
  * Created by jamesreed on 7/11/15.
  */
-public class ArtistTrackListFragment extends Fragment {
+public class ArtistTrackListFragment extends Fragment implements AdapterView.OnItemClickListener {
     private static final String BUNDLE_TRACK_LIST = "trackList";
     private static final String BUNDLE_ARTIST = "artist";
     private ArtistListItem mArtist = null;
@@ -78,6 +79,7 @@ public class ArtistTrackListFragment extends Fragment {
     private void initTrackListView(View rootView) {
         ListView trackListView = (ListView) rootView.findViewById(R.id.artist_track_list_list_view);
         trackListView.setAdapter(mTrackListAdapter);
+        trackListView.setOnItemClickListener(this);
     }
 
     private void initTrackListAdapter(ArrayList<TrackListItem> trackList) {
@@ -96,6 +98,15 @@ public class ArtistTrackListFragment extends Fragment {
         }
         mCurrentToast = Toast.makeText(getActivity(), message, Toast.LENGTH_LONG);
         mCurrentToast.show();
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        TrackListItem track = mTrackListAdapter.getItem(position);
+        Intent intent = new Intent(getActivity(), TrackPlayerActivity.class);
+        intent.putExtra(TrackPlayerActivity.EXTRA_ARTIST, mArtist);
+        intent.putExtra(TrackPlayerActivity.EXTRA_TRACK, track);
+        startActivity(intent);
     }
 
     private class TrackListFetchTask extends AsyncTask<String, Void, List<Track>> {
