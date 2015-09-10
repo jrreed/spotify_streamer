@@ -10,20 +10,28 @@ import kaaes.spotify.webapi.android.models.Image;
  * Created by jamesreed on 7/12/15.
  */
 public class TrackListItem extends Track implements Parcelable {
-    public static final int PREFERRED_IMAGE_DIM = 200;
+    public static final int PREFERRED_THUMBNAIL_IMAGE_DIM = 200;
+    public static final int PREFERRED_WALLPAPER_IMAGE_DIM = 800;
 
     private String mAlbumName = null;
+    private long mDuration = 0l;
     private String mId = null;
-    private String mImageUrl = null;
+    private String mThumbnailImageUrl = null;
+    private String mWallpaperImageUrl = null;
     private String mName = null;
 
     public TrackListItem(Track track) {
         mId = track.id;
+        mDuration = track.duration_ms;
         if (track.album != null) {
             OptimalImageFinder imageFinder = new OptimalImageFinder(track.album.images);
-            Image image = imageFinder.closestTo(PREFERRED_IMAGE_DIM);
+            Image image = imageFinder.closestTo(PREFERRED_THUMBNAIL_IMAGE_DIM);
             if (image != null) {
-                mImageUrl = image.url;
+                mThumbnailImageUrl = image.url;
+            }
+            image = imageFinder.closestTo(PREFERRED_WALLPAPER_IMAGE_DIM);
+            if (image != null) {
+                mWallpaperImageUrl = image.url;
             }
             mAlbumName = track.album.name;
         }
@@ -34,12 +42,20 @@ public class TrackListItem extends Track implements Parcelable {
         return mAlbumName;
     }
 
+    public long getDuration() {
+        return mDuration;
+    }
+
     public String getId() {
         return mId;
     }
 
-    public String getImageUrl() {
-        return mImageUrl;
+    public String getThumbnailImageUrl() {
+        return mThumbnailImageUrl;
+    }
+
+    public String getWallpaperImageUrl() {
+        return mWallpaperImageUrl;
     }
 
     public String getName() {
@@ -53,8 +69,11 @@ public class TrackListItem extends Track implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel outStream, int flags) {
+        outStream.writeString(mAlbumName);
+        outStream.writeLong(mDuration);
         outStream.writeString(mId);
-        outStream.writeString(mImageUrl);
+        outStream.writeString(mThumbnailImageUrl);
+        outStream.writeString(mWallpaperImageUrl);
         outStream.writeString(mName);
     }
 
@@ -74,8 +93,11 @@ public class TrackListItem extends Track implements Parcelable {
      * Initializes a TrackListItem from a Parcel input stream.
      */
     private TrackListItem(Parcel inStream) {
+        mAlbumName = inStream.readString();
+        mDuration = inStream.readLong();
         mId = inStream.readString();
-        mImageUrl = inStream.readString();
+        mThumbnailImageUrl = inStream.readString();
+        mWallpaperImageUrl = inStream.readString();
         mName = inStream.readString();
     }
 }

@@ -53,10 +53,10 @@ public class TrackListAdapter extends ArrayAdapter<TrackListItem> {
 
     private void setAlbumPhoto(View view, TrackListItem track) {
         ImageView photoImageView = (ImageView) view.findViewById(R.id.list_item_track_album_photo);
-        if (track.getImageUrl() != null) {
+        if (track.getThumbnailImageUrl() != null) {
             photoImageView.setBackgroundColor(Color.TRANSPARENT);
             Picasso.with(getContext())
-                    .load(track.getImageUrl())
+                    .load(track.getThumbnailImageUrl())
                     .resize(PREFERRED_IMAGE_DIM, PREFERRED_IMAGE_DIM)
                     .centerInside()
                     .into(photoImageView);
