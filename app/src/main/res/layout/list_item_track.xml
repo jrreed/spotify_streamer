@@ -13,7 +13,7 @@
         android:layout_height="@dimen/list_item_image_dim"
         android:layout_gravity="center_vertical"
         android:layout_marginRight="@dimen/activity_horizontal_margin"
-        android:contentDescription="@string/content_description_list_item_track_album_photo" />
+        android:contentDescription="@string/content_description_album_photo" />
 
     <LinearLayout
         android:layout_width="match_parent"

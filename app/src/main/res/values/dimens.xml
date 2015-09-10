@@ -3,5 +3,8 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="edit_text_min_height">48dp</dimen>
+    <dimen name="large_album_dim">256dp</dimen>
     <dimen name="list_item_image_dim">64dp</dimen>
+    <dimen name="player_button_dim">80dp</dimen>
+    <dimen name="scrubber_vertical_margin">8dp</dimen>
 </resources>

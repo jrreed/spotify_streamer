@@ -2,9 +2,14 @@
     <string name="app_name">Spotify Streamer</string>
     <string name="title_activity_artist_search">Artist Search</string>
     <string name="hint_artist_search">Enter an artist name</string>
-    <string name="content_description_list_item_artist">Artist Photo</string>
-    <string name="content_description_list_item_track_album_photo">Album Photo</string>
+    <string name="content_description_artist_photo">Artist Photo</string>
+    <string name="content_description_album_photo">Album Photo</string>
     <string name="title_activity_artist_track_list">Top 10 Tracks</string>
+    <string name="title_activity_track_player">Spotify Streamer</string>
     <string name="spotify_api_error_message">Sorry, we weren\'t able to complete your request. Please check your internet connection and try again.</string>
     <string name="empty_search_results_message">Your search did not match any artists</string>
+    <string name="content_description_previous">Previous</string>
+    <string name="content_description_play">Play</string>
+    <string name="content_description_pause">Pause</string>
+    <string name="content_description_next">Next</string>
 </resources>
