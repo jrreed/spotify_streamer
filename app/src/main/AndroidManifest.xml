@@ -27,5 +27,13 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.plainjimbo.spotifystreamer.ArtistSearchActivity" />
         </activity>
+        <activity
+            android:name=".TrackPlayerActivity"
+            android:label="@string/title_activity_track_player"
+            android:parentActivityName=".ArtistTrackListActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.plainjimbo.spotifystreamer.ArtistTrackListActivity" />
+        </activity>
     </application>
 </manifest>
