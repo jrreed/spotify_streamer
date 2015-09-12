@@ -16,6 +16,7 @@ public class TrackListItem extends Track implements Parcelable {
     private String mAlbumName = null;
     private long mDuration = 0l;
     private String mId = null;
+    private String mPreviewUrl = null;
     private String mThumbnailImageUrl = null;
     private String mWallpaperImageUrl = null;
     private String mName = null;
@@ -23,6 +24,7 @@ public class TrackListItem extends Track implements Parcelable {
     public TrackListItem(Track track) {
         mId = track.id;
         mDuration = track.duration_ms;
+        mPreviewUrl = track.preview_url;
         if (track.album != null) {
             OptimalImageFinder imageFinder = new OptimalImageFinder(track.album.images);
             Image image = imageFinder.closestTo(PREFERRED_THUMBNAIL_IMAGE_DIM);
@@ -50,6 +52,10 @@ public class TrackListItem extends Track implements Parcelable {
         return mId;
     }
 
+    public String getPreviewUrl() {
+        return mPreviewUrl;
+    }
+
     public String getThumbnailImageUrl() {
         return mThumbnailImageUrl;
     }
@@ -72,6 +78,7 @@ public class TrackListItem extends Track implements Parcelable {
         outStream.writeString(mAlbumName);
         outStream.writeLong(mDuration);
         outStream.writeString(mId);
+        outStream.writeString(mPreviewUrl);
         outStream.writeString(mThumbnailImageUrl);
         outStream.writeString(mWallpaperImageUrl);
         outStream.writeString(mName);
@@ -96,6 +103,7 @@ public class TrackListItem extends Track implements Parcelable {
         mAlbumName = inStream.readString();
         mDuration = inStream.readLong();
         mId = inStream.readString();
+        mPreviewUrl = inStream.readString();
         mThumbnailImageUrl = inStream.readString();
         mWallpaperImageUrl = inStream.readString();
         mName = inStream.readString();
