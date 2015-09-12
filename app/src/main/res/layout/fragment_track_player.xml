@@ -72,6 +72,9 @@
                 android:id="@+id/player_previous"
                 android:layout_width="@dimen/player_button_dim"
                 android:layout_height="@dimen/player_button_dim"
+                android:padding="@dimen/activity_horizontal_margin"
+                android:scaleType="centerCrop"
+                android:src="@android:drawable/ic_media_previous"
                 android:layout_marginLeft="@dimen/activity_horizontal_margin"
                 android:layout_marginRight="@dimen/activity_horizontal_margin"
                 android:contentDescription="@string/content_description_previous" />
@@ -79,7 +82,9 @@
                 android:id="@+id/player_play"
                 android:layout_width="@dimen/player_button_dim"
                 android:layout_height="@dimen/player_button_dim"
-                android:drawable="@android:drawable/ic_media_play"
+                android:padding="@dimen/activity_horizontal_margin"
+                android:scaleType="centerCrop"
+                android:src="@android:drawable/ic_media_play"
                 android:layout_marginLeft="@dimen/activity_horizontal_margin"
                 android:layout_marginRight="@dimen/activity_horizontal_margin"
                 android:contentDescription="@string/content_description_play" />
@@ -88,7 +93,9 @@
                 android:visibility="gone"
                 android:layout_width="@dimen/player_button_dim"
                 android:layout_height="@dimen/player_button_dim"
-                android:drawable="@android:drawable/ic_media_pause"
+                android:padding="@dimen/activity_horizontal_margin"
+                android:scaleType="centerCrop"
+                android:src="@android:drawable/ic_media_pause"
                 android:layout_marginLeft="@dimen/activity_horizontal_margin"
                 android:layout_marginRight="@dimen/activity_horizontal_margin"
                 android:contentDescription="@string/content_description_pause" />
@@ -96,7 +103,9 @@
                 android:id="@+id/player_next"
                 android:layout_width="@dimen/player_button_dim"
                 android:layout_height="@dimen/player_button_dim"
-                android:drawable="@android:drawable/ic_media_next"
+                android:padding="@dimen/activity_horizontal_margin"
+                android:scaleType="centerCrop"
+                android:src="@android:drawable/ic_media_next"
                 android:layout_marginLeft="@dimen/activity_horizontal_margin"
                 android:layout_marginRight="@dimen/activity_horizontal_margin"
                 android:contentDescription="@string/content_description_next" />
