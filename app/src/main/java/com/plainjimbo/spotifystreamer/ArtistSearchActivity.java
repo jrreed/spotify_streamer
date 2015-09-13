@@ -2,6 +2,7 @@ package com.plainjimbo.spotifystreamer;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 
@@ -73,10 +74,7 @@ public class ArtistSearchActivity extends AppCompatActivity implements
 
     @Override
     public void onTrackSelected(ArtistListItem artist, ArrayList<TrackListItem> trackList, int position) {
-        Intent intent = new Intent(this, TrackPlayerActivity.class);
-        intent.putExtra(TrackPlayerActivity.EXTRA_ARTIST, artist);
-        intent.putExtra(TrackPlayerActivity.EXTRA_TRACK_INDEX, position);
-        intent.putExtra(TrackPlayerActivity.EXTRA_TRACK_LIST, trackList);
-        startActivity(intent);
+        DialogFragment fragment = TrackPlayerFragment.create(artist, trackList, position);
+        fragment.show(getSupportFragmentManager(), "dialog");
     }
 }

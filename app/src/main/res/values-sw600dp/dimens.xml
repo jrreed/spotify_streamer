@@ -1,0 +1,4 @@
+<resources>
+    <dimen name="track_player_horizontal_margin">48dp</dimen>
+    <dimen name="track_player_vertical_margin">32dp</dimen>
+</resources>

@@ -1,14 +1,16 @@
 package com.plainjimbo.spotifystreamer;
 
+import android.app.Dialog;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -22,7 +24,7 @@ import com.squareup.picasso.Picasso;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class TrackPlayerFragment extends Fragment implements View.OnClickListener,
+public class TrackPlayerFragment extends DialogFragment implements View.OnClickListener,
         MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
         MediaPlayer.OnCompletionListener, SeekBar.OnSeekBarChangeListener {
     private static final String BUNDLE_AUTO_PLAY = "autoPlay";
@@ -92,6 +94,13 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
         renderTrack();
         renderPosition();
         return rootView;
+    }
+
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        return dialog;
     }
 
     @Override
