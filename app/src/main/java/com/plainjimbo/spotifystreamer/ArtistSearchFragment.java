@@ -25,9 +25,6 @@ import kaaes.spotify.webapi.android.models.Pager;
 import retrofit.RetrofitError;
 
 
-/**
- * A placeholder fragment containing a simple view.
- */
 public class ArtistSearchFragment extends Fragment implements TextView.OnEditorActionListener, AdapterView.OnItemClickListener {
 
     public interface OnArtistSelected {
