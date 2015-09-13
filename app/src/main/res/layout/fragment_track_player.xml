@@ -45,6 +45,7 @@
             android:layout_marginBottom="@dimen/scrubber_vertical_margin" />
 
         <RelativeLayout
+            android:id="@+id/player_stats"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">

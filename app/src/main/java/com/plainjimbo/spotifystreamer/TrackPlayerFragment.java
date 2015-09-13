@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,7 +26,9 @@ import java.util.ArrayList;
 /**
  * Created by jamesreed on 9/10/15.
  */
-public class TrackPlayerFragment extends Fragment implements View.OnClickListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
+public class TrackPlayerFragment extends Fragment implements View.OnClickListener,
+        MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
+        MediaPlayer.OnCompletionListener, SeekBar.OnSeekBarChangeListener {
     private static final String BUNDLE_AUTO_PLAY = "autoPlay";
     private static final String BUNDLE_POSITION = "position";
     private static final String BUNDLE_TRACK_INDEX = "trackIndex";
@@ -34,6 +37,7 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
     private MediaPlayer mPlayer = null;
     private boolean mPlayerPrepared = false;
     private int mPositionMs = 0;
+    private boolean mProgressRenderingAllowed = true;
     private boolean mShouldPlay = false;
     private TrackListItem mTrack = null;
     private int mTrackIndex = -1;
@@ -49,6 +53,7 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
 
     // Player Controls
     private LinearLayout mPlayerControls = null;
+    private RelativeLayout mPlayerStats = null;
     private ImageButton mPauseButton = null;
     private ImageButton mPlayButton = null;
     private ImageButton mPreviousButton = null;
@@ -214,6 +219,7 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
     @Override
     public void onPrepared(MediaPlayer player) {
         mPlayerPrepared = true;
+        renderDuration();
         togglePlayerControls(true);
         if (mPositionMs > 0) {
             mPlayer.seekTo(mPositionMs);
@@ -241,6 +247,7 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
 
     private void initPlayerControls(View rootView) {
         mPlayerControls = (LinearLayout)rootView.findViewById(R.id.player_controls);
+        mPlayerStats = (RelativeLayout)rootView.findViewById(R.id.player_stats);
         mLoadingText = (TextView)rootView.findViewById(R.id.loading_text);
 
         mPlayButton = (ImageButton)rootView.findViewById(R.id.player_play);
@@ -256,19 +263,30 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
         mNextButton.setOnClickListener(this);
 
         mScrubber = (SeekBar)rootView.findViewById(R.id.player_scrubber);
+        mScrubber.setOnSeekBarChangeListener(this);
         mProgressText = (TextView)rootView.findViewById(R.id.player_progress);
     }
 
     private void renderPosition() {
-        mScrubber.setProgress(mPositionMs);
         mProgressText.setText(millisToTimeString(mPositionMs));
-    };
+        if (mProgressRenderingAllowed) {
+            mScrubber.setProgress(mPositionMs);
+        }
+    }
+
+    private void renderDuration() {
+        mScrubber.setMax(mPlayer.getDuration());
+        trackDurationView.setText(millisToTimeString(mPlayer.getDuration()));
+    }
 
     private void togglePlayerControls(boolean enabled) {
+        mScrubber.setEnabled(enabled);
         if (enabled) {
+            mPlayerStats.setVisibility(View.VISIBLE);
             mPlayerControls.setVisibility(View.VISIBLE);
             mLoadingText.setVisibility(View.GONE);
         } else {
+            mPlayerStats.setVisibility(View.GONE);
             mPlayerControls.setVisibility(View.GONE);
             mLoadingText.setVisibility(View.VISIBLE);
         }
@@ -287,8 +305,6 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
         artistNameView.setText(mArtist.getName());
         albumNameView.setText(mTrack.getAlbumName());
         trackNameView.setText(mTrack.getName());
-        trackDurationView.setText(millisToTimeString((int) mTrack.getDuration()));
-        mScrubber.setMax((int) mTrack.getDuration());
         if (imageUrl != null) {
             albumPhotoView.setBackgroundColor(Color.TRANSPARENT);
             Picasso.with(getActivity())
@@ -371,6 +387,25 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
             mCurrentTask.cancel(true);
             mCurrentTask = null;
         }
+    }
+
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        if (fromUser && playerPrepared()) {
+            mPlayer.seekTo(progress);
+            setPositionMillis(progress);
+            renderPosition();
+        }
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+        mProgressRenderingAllowed = false;
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+        mProgressRenderingAllowed = true;
     }
 
     private class TrackPlayerMonitorTask extends AsyncTask<Void, Integer, Void> {
