@@ -22,7 +22,7 @@ import java.util.ArrayList;
 /**
  * Created by jamesreed on 9/10/15.
  */
-public class TrackPlayerFragment extends Fragment implements View.OnClickListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener {
+public class TrackPlayerFragment extends Fragment implements View.OnClickListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
     private static final String BUNDLE_AUTO_PLAY = "autoPlay";
     private static final String BUNDLE_POSITION = "position";
     private static final String BUNDLE_TRACK_INDEX = "trackIndex";
@@ -180,7 +180,15 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
         mPlayer = new MediaPlayer();
         mPlayer.setOnErrorListener(this);
         mPlayer.setOnPreparedListener(this);
+        mPlayer.setOnCompletionListener(this);
         mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+    }
+
+    @Override
+    public boolean onError(MediaPlayer player, int what, int extra) {
+        makeToast(getString(R.string.spotify_api_error_message));
+        destroyPlayer();
+        return true;
     }
 
     @Override
@@ -196,10 +204,8 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
     }
 
     @Override
-    public boolean onError(MediaPlayer player, int what, int extra) {
-        makeToast(getString(R.string.spotify_api_error_message));
-        destroyPlayer();
-        return true;
+    public void onCompletion(MediaPlayer player) {
+        next();
     }
 
     private void destroyPlayer() {
@@ -285,19 +291,23 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
     }
 
     private void previous() {
-        if (mTrackIndex > 0) {
-            setTrack(mTrackIndex - 1);
-            renderTrack();
-            initPlayer();
+        int previousIndex = mTrackIndex - 1;
+        if (previousIndex <= -1) {
+            previousIndex = mTrackList.size() - 1;
         }
+        setTrack(previousIndex);
+        renderTrack();
+        initPlayer();
     }
 
     private void next() {
-        if (mTrackIndex < mTrackList.size() - 1) {
-            setTrack(mTrackIndex + 1);
-            renderTrack();
-            initPlayer();
+        int nextIndex = mTrackIndex + 1;
+        if (nextIndex >= mTrackList.size()) {
+            nextIndex = 0;
         }
+        setTrack(nextIndex);
+        renderTrack();
+        initPlayer();
     }
 
     private boolean playerPrepared() {
