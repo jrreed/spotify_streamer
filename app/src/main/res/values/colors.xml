@@ -1,3 +1,5 @@
 <resources>
     <color name="medium_gray">#bebebe</color>
+    <color name="light_gray">#e1e1e1</color>
+    <color name="lime_green">#6eaf00</color>
 </resources>
