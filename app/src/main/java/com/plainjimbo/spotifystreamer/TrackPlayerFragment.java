@@ -1,6 +1,5 @@
 package com.plainjimbo.spotifystreamer;
 
-import android.content.Intent;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -23,16 +22,15 @@ import com.squareup.picasso.Picasso;
 import java.io.IOException;
 import java.util.ArrayList;
 
-/**
- * Created by jamesreed on 9/10/15.
- */
 public class TrackPlayerFragment extends Fragment implements View.OnClickListener,
         MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
         MediaPlayer.OnCompletionListener, SeekBar.OnSeekBarChangeListener {
     private static final String BUNDLE_AUTO_PLAY = "autoPlay";
     private static final String BUNDLE_POSITION = "position";
     private static final String BUNDLE_TRACK_INDEX = "trackIndex";
-    private ArtistListItem mArtist = null;
+    private static final String ARGS_ARTIST = "artist";
+    private static final String ARGS_TRACK_INDEX = "trackIndex";
+    private static final String ARGS_TRACK_LIST = "trackList";
     private Toast mCurrentToast = null;
     private MediaPlayer mPlayer = null;
     private boolean mPlayerPrepared = false;
@@ -41,7 +39,6 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
     private boolean mShouldPlay = true;
     private TrackListItem mTrack = null;
     private int mTrackIndex = -1;
-    private ArrayList<TrackListItem> mTrackList = null;
     private TrackPlayerMonitorTask mCurrentTask = null;
 
     // Track data views
@@ -63,6 +60,16 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
     private TextView mProgressText = null;
 
     public TrackPlayerFragment() {}
+
+    public static TrackPlayerFragment create(ArtistListItem artist, ArrayList<TrackListItem> trackList, int position) {
+        TrackPlayerFragment fragment = new TrackPlayerFragment();
+        Bundle args = new Bundle();
+        args.putParcelable(ARGS_ARTIST, artist);
+        args.putParcelableArrayList(ARGS_TRACK_LIST, trackList);
+        args.putInt(ARGS_TRACK_INDEX, position);
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -134,22 +141,28 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
     }
 
     private boolean canInitFragmentData() {
-        Intent intent = getActivity().getIntent();
-        return intent.hasExtra(TrackPlayerActivity.EXTRA_ARTIST) &&
-                intent.hasExtra(TrackPlayerActivity.EXTRA_TRACK_INDEX) &&
-                intent.hasExtra(TrackPlayerActivity.EXTRA_TRACK_LIST);
+        Bundle args = getArguments();
+        return args.containsKey(ARGS_ARTIST) &&
+                args.containsKey(ARGS_TRACK_LIST) &&
+                args.containsKey(ARGS_TRACK_INDEX);
     }
 
     private void initFragmentData() {
-        Intent intent = getActivity().getIntent();
-        mArtist = intent.getParcelableExtra(TrackPlayerActivity.EXTRA_ARTIST);
-        mTrackList = intent.getParcelableArrayListExtra(TrackPlayerActivity.EXTRA_TRACK_LIST);
-        setTrack(intent.getIntExtra(TrackPlayerActivity.EXTRA_TRACK_INDEX, -1), 0);
+        Bundle args = getArguments();
+        setTrack(args.getInt(ARGS_TRACK_INDEX, -1), 0);
+    }
+
+    private ArtistListItem getArtist() {
+        return getArguments().getParcelable(ARGS_ARTIST);
+    }
+
+    private ArrayList<TrackListItem> getTrackList() {
+        return getArguments().getParcelableArrayList(ARGS_TRACK_LIST);
     }
 
     private void setTrack(int trackIndex, int positionMs) {
         mTrackIndex = trackIndex;
-        mTrack = mTrackList.get(mTrackIndex);
+        mTrack = getTrackList().get(mTrackIndex);
         setPositionMillis(positionMs);
     }
 
@@ -219,6 +232,7 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
     public void onPrepared(MediaPlayer player) {
         mPlayerPrepared = true;
         renderDuration();
+        renderPosition();
         togglePlayerControls(true);
         if (mPositionMs > 0) {
             mPlayer.seekTo(mPositionMs);
@@ -301,7 +315,7 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
 
     private void renderTrack() {
         String imageUrl = mTrack.getWallpaperImageUrl();
-        artistNameView.setText(mArtist.getName());
+        artistNameView.setText(getArtist().getName());
         albumNameView.setText(mTrack.getAlbumName());
         trackNameView.setText(mTrack.getName());
         if (imageUrl != null) {
@@ -352,9 +366,9 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
 
     private void changeTrack(int trackIndex) {
         if (trackIndex <= -1) {
-            trackIndex = mTrackList.size() - 1;
+            trackIndex = getTrackList().size() - 1;
         }
-        else if (trackIndex >= mTrackList.size()) {
+        else if (trackIndex >= getTrackList().size()) {
             trackIndex = 0;
         }
         setTrack(trackIndex, 0);

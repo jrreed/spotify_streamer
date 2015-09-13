@@ -1,6 +1,5 @@
 package com.plainjimbo.spotifystreamer;
 
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -29,21 +28,26 @@ public class ArtistTrackListFragment extends Fragment implements AdapterView.OnI
     }
 
     private static final String BUNDLE_TRACK_LIST = "trackList";
-    private static final String BUNDLE_ARTIST = "artist";
-    private ArtistListItem mArtist = null;
+    private static final String ARGS_ARTIST = "artist";
     private Toast mCurrentToast = null;
     private TrackListAdapter mTrackListAdapter = null;
     private TrackListFetchTask mCurrentTask = null;
 
     public ArtistTrackListFragment() {}
 
+    public static ArtistTrackListFragment create(ArtistListItem artist) {
+        ArtistTrackListFragment fragment = new ArtistTrackListFragment();
+        Bundle args = new Bundle();
+        args.putParcelable(ARGS_ARTIST, artist);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        initArtist();
         ArrayList<TrackListItem> trackList = null;
-        if (savedInstanceState != null && savedInstanceState.containsKey(BUNDLE_TRACK_LIST) && savedInstanceState.containsKey(BUNDLE_ARTIST) ) {
-            mArtist = savedInstanceState.getParcelable(BUNDLE_ARTIST);
+        if (savedInstanceState != null && savedInstanceState.containsKey(BUNDLE_TRACK_LIST)) {
             trackList = savedInstanceState.getParcelableArrayList(BUNDLE_TRACK_LIST);
         }
         initTrackListAdapter(trackList);
@@ -69,12 +73,10 @@ public class ArtistTrackListFragment extends Fragment implements AdapterView.OnI
         } else {
             savedInstanceState.putParcelableArrayList(BUNDLE_TRACK_LIST, mTrackListAdapter.getTrackList());
         }
-        savedInstanceState.putParcelable(BUNDLE_ARTIST, mArtist);
     }
 
-    private void initArtist() {
-        Intent intent = getActivity().getIntent();
-        mArtist = intent.getParcelableExtra(ArtistTrackListActivity.EXTRA_ARTIST);
+    private ArtistListItem getArtist() {
+        return getArguments().getParcelable(ARGS_ARTIST);
     }
 
     private void initTrackListView(View rootView) {
@@ -87,7 +89,7 @@ public class ArtistTrackListFragment extends Fragment implements AdapterView.OnI
         if (trackList == null) {
             mTrackListAdapter = new TrackListAdapter(getActivity());
             mCurrentTask = new TrackListFetchTask();
-            mCurrentTask.execute(mArtist.getId());
+            mCurrentTask.execute(getArtist().getId());
         } else {
             mTrackListAdapter = new TrackListAdapter(getActivity(), trackList);
         }
@@ -103,7 +105,7 @@ public class ArtistTrackListFragment extends Fragment implements AdapterView.OnI
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        ((OnTrackSelected)getActivity()).onTrackSelected(mArtist, mTrackListAdapter.getTrackList(), position);
+        ((OnTrackSelected)getActivity()).onTrackSelected(getArtist(), mTrackListAdapter.getTrackList(), position);
     }
 
     private class TrackListFetchTask extends AsyncTask<String, Void, List<Track>> {

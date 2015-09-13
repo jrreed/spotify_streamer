@@ -15,8 +15,9 @@ public class ArtistTrackListActivity extends AppCompatActivity implements Artist
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_artist_track_list);
         if (savedInstanceState == null) {
+            ArtistTrackListFragment fragment = ArtistTrackListFragment.create(getArtist());
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.artist_track_list_container, new ArtistTrackListFragment())
+                    .add(R.id.artist_track_list_container, fragment)
                     .commit();
         }
         initSubtitle();
@@ -30,6 +31,10 @@ public class ArtistTrackListActivity extends AppCompatActivity implements Artist
         }
     }
 
+    private ArtistListItem getArtist() {
+        return getIntent().getParcelableExtra(EXTRA_ARTIST);
+    }
+
     @Override
     public void onTrackSelected(ArtistListItem artist, ArrayList<TrackListItem> trackList, int position) {
         Intent intent = new Intent(this, TrackPlayerActivity.class);
@@ -37,6 +42,5 @@ public class ArtistTrackListActivity extends AppCompatActivity implements Artist
         intent.putExtra(TrackPlayerActivity.EXTRA_TRACK_INDEX, position);
         intent.putExtra(TrackPlayerActivity.EXTRA_TRACK_LIST, trackList);
         startActivity(intent);
-
     }
 }
