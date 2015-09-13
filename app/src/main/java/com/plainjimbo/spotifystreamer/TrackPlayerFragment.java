@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -12,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,11 +33,12 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
     private Toast mCurrentToast = null;
     private MediaPlayer mPlayer = null;
     private boolean mPlayerPrepared = false;
-    private int mPosition = 0;
+    private int mPositionMs = 0;
     private boolean mShouldPlay = false;
     private TrackListItem mTrack = null;
     private int mTrackIndex = -1;
     private ArrayList<TrackListItem> mTrackList = null;
+    private TrackPlayerMonitorTask mCurrentTask = null;
 
     // Track data views
     TextView artistNameView =null;
@@ -51,6 +54,8 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
     private ImageButton mPreviousButton = null;
     private ImageButton mNextButton = null;
     private TextView mLoadingText = null;
+    private SeekBar mScrubber = null;
+    private TextView mProgressText = null;
 
     public TrackPlayerFragment() {
     }
@@ -74,6 +79,7 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
         initPlayerControls(rootView);
         initTrackViews(rootView);
         renderTrack();
+        renderPosition();
         return rootView;
     }
 
@@ -87,9 +93,9 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
     public void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
         if (playerPrepared()) {
-            mPosition = mPlayer.getCurrentPosition();
+            setPositionMillis(mPlayer.getCurrentPosition());
         }
-        savedInstanceState.putInt(BUNDLE_POSITION, mPosition);
+        savedInstanceState.putInt(BUNDLE_POSITION, mPositionMs);
         savedInstanceState.putBoolean(BUNDLE_AUTO_PLAY, mShouldPlay);
         savedInstanceState.putInt(BUNDLE_TRACK_INDEX, mTrackIndex);
     }
@@ -99,7 +105,7 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
         super.onPause();
         boolean shouldPlayWas = mShouldPlay;
         if (playerPrepared()) {
-            mPosition = mPlayer.getCurrentPosition();
+            setPositionMillis(mPlayer.getCurrentPosition());
         }
         destroyPlayer();
         mShouldPlay = shouldPlayWas;
@@ -134,12 +140,17 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
         Intent intent = getActivity().getIntent();
         mArtist = intent.getParcelableExtra(TrackPlayerActivity.EXTRA_ARTIST);
         mTrackList = intent.getParcelableArrayListExtra(TrackPlayerActivity.EXTRA_TRACK_LIST);
-        setTrack(intent.getIntExtra(TrackPlayerActivity.EXTRA_TRACK_INDEX, -1));
+        setTrack(intent.getIntExtra(TrackPlayerActivity.EXTRA_TRACK_INDEX, -1), 0);
     }
 
-    private void setTrack(int trackIndex) {
+    private void setTrack(int trackIndex, int positionMs) {
         mTrackIndex = trackIndex;
         mTrack = mTrackList.get(mTrackIndex);
+        setPositionMillis(positionMs);
+    }
+
+    private void setPositionMillis(int positionMs) {
+        mPositionMs = positionMs;
     }
 
     private boolean canRestoreInstanceState(Bundle savedInstanceState) {
@@ -149,13 +160,14 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
     private void restoreInstanceState(Bundle savedInstanceState) {
         if (canRestoreInstanceState(savedInstanceState)) {
             // Optional data
+            int positionMs = 0;
             if (savedInstanceState.containsKey(BUNDLE_POSITION)) {
-                mPosition = savedInstanceState.getInt(BUNDLE_POSITION);
+                positionMs = savedInstanceState.getInt(BUNDLE_POSITION);
             }
             if (savedInstanceState.containsKey(BUNDLE_AUTO_PLAY)) {
                 mShouldPlay = savedInstanceState.getBoolean(BUNDLE_AUTO_PLAY);
             }
-            setTrack(savedInstanceState.getInt(TrackPlayerActivity.EXTRA_TRACK_INDEX, -1));
+            setTrack(savedInstanceState.getInt(TrackPlayerActivity.EXTRA_TRACK_INDEX, -1), positionMs);
         }
     }
 
@@ -165,7 +177,7 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
             createPlayer();
         }
         else {
-            mPlayer.reset();
+            resetPlayer();
         }
         try {
             mPlayer.setDataSource(mTrack.getPreviewUrl());
@@ -187,6 +199,11 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
         mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
     }
 
+    private void resetPlayer() {
+        stopPlayerProgressMonitor();
+        mPlayer.reset();
+    }
+
     @Override
     public boolean onError(MediaPlayer player, int what, int extra) {
         makeToast(getString(R.string.spotify_api_error_message));
@@ -198,8 +215,8 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
     public void onPrepared(MediaPlayer player) {
         mPlayerPrepared = true;
         togglePlayerControls(true);
-        if (mPosition > 0) {
-            mPlayer.seekTo(mPosition);
+        if (mPositionMs > 0) {
+            mPlayer.seekTo(mPositionMs);
         }
         if (mShouldPlay) {
             play();
@@ -213,6 +230,7 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
 
     private void destroyPlayer() {
         mPlayerPrepared = false;
+        stopPlayerProgressMonitor();
         if (mPlayer != null) {
             mPlayer.release();
             mPlayer = null;
@@ -236,7 +254,15 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
 
         mNextButton = (ImageButton)rootView.findViewById(R.id.player_next);
         mNextButton.setOnClickListener(this);
+
+        mScrubber = (SeekBar)rootView.findViewById(R.id.player_scrubber);
+        mProgressText = (TextView)rootView.findViewById(R.id.player_progress);
     }
+
+    private void renderPosition() {
+        mScrubber.setProgress(mPositionMs);
+        mProgressText.setText(millisToTimeString(mPositionMs));
+    };
 
     private void togglePlayerControls(boolean enabled) {
         if (enabled) {
@@ -261,7 +287,8 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
         artistNameView.setText(mArtist.getName());
         albumNameView.setText(mTrack.getAlbumName());
         trackNameView.setText(mTrack.getName());
-        trackDurationView.setText(millisToTimeString(mTrack.getDuration()));
+        trackDurationView.setText(millisToTimeString((int) mTrack.getDuration()));
+        mScrubber.setMax((int) mTrack.getDuration());
         if (imageUrl != null) {
             albumPhotoView.setBackgroundColor(Color.TRANSPARENT);
             Picasso.with(getActivity())
@@ -275,8 +302,8 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
         }
     }
 
-    private String millisToTimeString(long millis) {
-        long seconds = (millis / 10000) % 60;
+    private String millisToTimeString(int millis) {
+        long seconds = (millis / 1000) % 60;
         long minutes = (millis / (1000*60)) % 60;
         return String.format("%01d:%02d", minutes, seconds);
     }
@@ -286,6 +313,7 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
         mPlayButton.setVisibility(View.GONE);
         mPauseButton.setVisibility(View.VISIBLE);
         if (playerPrepared()) {
+            startPlayerProgressMonitor();
             mPlayer.start();
         }
     }
@@ -300,22 +328,23 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
     }
 
     private void previous() {
-        int previousIndex = mTrackIndex - 1;
-        if (previousIndex <= -1) {
-            previousIndex = mTrackList.size() - 1;
-        }
-        setTrack(previousIndex);
-        renderTrack();
-        initPlayer();
+        changeTrack(mTrackIndex - 1);
     }
 
     private void next() {
-        int nextIndex = mTrackIndex + 1;
-        if (nextIndex >= mTrackList.size()) {
-            nextIndex = 0;
+        changeTrack(mTrackIndex + 1);
+    }
+
+    private void changeTrack(int trackIndex) {
+        if (trackIndex <= -1) {
+            trackIndex = mTrackList.size() - 1;
         }
-        setTrack(nextIndex);
+        else if (trackIndex >= mTrackList.size()) {
+            trackIndex = 0;
+        }
+        setTrack(trackIndex, 0);
         renderTrack();
+        renderPosition();
         initPlayer();
     }
 
@@ -329,5 +358,44 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
         }
         mCurrentToast = Toast.makeText(getActivity(), message, Toast.LENGTH_LONG);
         mCurrentToast.show();
+    }
+
+    private void startPlayerProgressMonitor() {
+        stopPlayerProgressMonitor();
+        mCurrentTask = new TrackPlayerMonitorTask();
+        mCurrentTask.execute();
+    }
+
+    private void stopPlayerProgressMonitor() {
+        if (mCurrentTask != null) {
+            mCurrentTask.cancel(true);
+            mCurrentTask = null;
+        }
+    }
+
+    private class TrackPlayerMonitorTask extends AsyncTask<Void, Integer, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+                while(true) {
+                    if (mShouldPlay) {
+                        publishProgress(mPlayer.getCurrentPosition());
+                    }
+                    Thread.sleep(250);
+                }
+            } catch (InterruptedException e) { /* Task Cancelled */ }
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... progress) {
+            if (progress.length == 0) {
+                return;
+            }
+            setPositionMillis(progress[0]);
+            renderPosition();
+            return;
+        }
     }
 }

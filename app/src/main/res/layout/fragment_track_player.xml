@@ -38,7 +38,7 @@
             android:gravity="center"/>
 
         <SeekBar
-            android:id="@+id/track_scrubber"
+            android:id="@+id/player_scrubber"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/scrubber_vertical_margin"
