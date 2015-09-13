@@ -1,10 +1,13 @@
 package com.plainjimbo.spotifystreamer;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 
-public class ArtistTrackListActivity extends AppCompatActivity {
+import java.util.ArrayList;
+
+public class ArtistTrackListActivity extends AppCompatActivity implements ArtistTrackListFragment.OnTrackSelected {
     public static final String EXTRA_ARTIST = "artist";
 
     @Override
@@ -25,5 +28,15 @@ public class ArtistTrackListActivity extends AppCompatActivity {
         if (actionBar != null && artist != null) {
             getSupportActionBar().setSubtitle(artist.getName());
         }
+    }
+
+    @Override
+    public void onTrackSelected(ArtistListItem artist, ArrayList<TrackListItem> trackList, int position) {
+        Intent intent = new Intent(this, TrackPlayerActivity.class);
+        intent.putExtra(TrackPlayerActivity.EXTRA_ARTIST, artist);
+        intent.putExtra(TrackPlayerActivity.EXTRA_TRACK_INDEX, position);
+        intent.putExtra(TrackPlayerActivity.EXTRA_TRACK_LIST, trackList);
+        startActivity(intent);
+
     }
 }

@@ -1,6 +1,5 @@
 package com.plainjimbo.spotifystreamer;
 
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -30,6 +29,11 @@ import retrofit.RetrofitError;
  * A placeholder fragment containing a simple view.
  */
 public class ArtistSearchFragment extends Fragment implements TextView.OnEditorActionListener, AdapterView.OnItemClickListener {
+
+    public interface OnArtistSelected {
+        public void onArtistSelected(ArtistListItem artist);
+    }
+
     private static final String BUNDLE_ARTIST_LIST = "artistList";
     private static final String BUNDLE_RETRY_QUERY = "retrySearch";
     private ArtistListAdapter mArtistListAdapter = null;
@@ -37,8 +41,7 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
     private String mRetryQuery = null;
     private Toast mCurrentToast = null;
 
-    public ArtistSearchFragment() {
-    }
+    public ArtistSearchFragment() {}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -97,10 +100,7 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        ArtistListItem artist = mArtistListAdapter.getItem(position);
-        Intent intent = new Intent(getActivity(), ArtistTrackListActivity.class);
-        intent.putExtra(ArtistTrackListActivity.EXTRA_ARTIST, artist);
-        startActivity(intent);
+        ((OnArtistSelected)getActivity()).onArtistSelected(mArtistListAdapter.getItem(position));
     }
 
     private void initSearchField(View rootView) {

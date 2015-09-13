@@ -22,10 +22,12 @@ import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Track;
 import retrofit.RetrofitError;
 
-/**
- * Created by jamesreed on 7/11/15.
- */
 public class ArtistTrackListFragment extends Fragment implements AdapterView.OnItemClickListener {
+
+    public interface OnTrackSelected {
+        public void onTrackSelected(ArtistListItem artist, ArrayList<TrackListItem> trackList, int position);
+    }
+
     private static final String BUNDLE_TRACK_LIST = "trackList";
     private static final String BUNDLE_ARTIST = "artist";
     private ArtistListItem mArtist = null;
@@ -33,8 +35,7 @@ public class ArtistTrackListFragment extends Fragment implements AdapterView.OnI
     private TrackListAdapter mTrackListAdapter = null;
     private TrackListFetchTask mCurrentTask = null;
 
-    public ArtistTrackListFragment() {
-    }
+    public ArtistTrackListFragment() {}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -102,12 +103,7 @@ public class ArtistTrackListFragment extends Fragment implements AdapterView.OnI
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        TrackListItem track = mTrackListAdapter.getItem(position);
-        Intent intent = new Intent(getActivity(), TrackPlayerActivity.class);
-        intent.putExtra(TrackPlayerActivity.EXTRA_ARTIST, mArtist);
-        intent.putExtra(TrackPlayerActivity.EXTRA_TRACK_INDEX, position);
-        intent.putExtra(TrackPlayerActivity.EXTRA_TRACK_LIST, mTrackListAdapter.getTrackList());
-        startActivity(intent);
+        ((OnTrackSelected)getActivity()).onTrackSelected(mArtist, mTrackListAdapter.getTrackList(), position);
     }
 
     private class TrackListFetchTask extends AsyncTask<String, Void, List<Track>> {

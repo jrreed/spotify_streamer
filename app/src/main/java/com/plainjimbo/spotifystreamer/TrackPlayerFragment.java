@@ -62,8 +62,7 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
     private SeekBar mScrubber = null;
     private TextView mProgressText = null;
 
-    public TrackPlayerFragment() {
-    }
+    public TrackPlayerFragment() {}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
