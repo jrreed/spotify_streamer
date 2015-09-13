@@ -63,7 +63,17 @@
 
         </RelativeLayout>
 
+        <TextView
+            android:id="@+id/loading_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/content_description_loading"
+            android:textSize="34sp"
+            android:textStyle="italic"
+            android:gravity="center" />
+
         <LinearLayout
+            android:id="@+id/player_controls"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"

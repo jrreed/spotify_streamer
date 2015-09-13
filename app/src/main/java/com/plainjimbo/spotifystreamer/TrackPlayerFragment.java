@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,11 +44,13 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
     TextView trackNameView = null;
     TextView trackDurationView = null;
 
-    // Buttons
+    // Player Controls
+    private LinearLayout mPlayerControls = null;
     private ImageButton mPauseButton = null;
     private ImageButton mPlayButton = null;
     private ImageButton mPreviousButton = null;
     private ImageButton mNextButton = null;
+    private TextView mLoadingText = null;
 
     public TrackPlayerFragment() {
     }
@@ -68,7 +71,7 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
                              Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
         View rootView = inflater.inflate(R.layout.fragment_track_player, container, false);
-        initButtons(rootView);
+        initPlayerControls(rootView);
         initTrackViews(rootView);
         renderTrack();
         return rootView;
@@ -170,7 +173,7 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
             makeToast(getString(R.string.spotify_api_error_message));
         }
         mPlayer.prepareAsync();
-        toggleButtonsEnabled(false);
+        togglePlayerControls(false);
         if (!mShouldPlay) {
             pause();
         }
@@ -194,7 +197,7 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
     @Override
     public void onPrepared(MediaPlayer player) {
         mPlayerPrepared = true;
-        toggleButtonsEnabled(true);
+        togglePlayerControls(true);
         if (mPosition > 0) {
             mPlayer.seekTo(mPosition);
         }
@@ -215,10 +218,13 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
             mPlayer = null;
         }
         pause();
-        toggleButtonsEnabled(false);
+        togglePlayerControls(false);
     }
 
-    private void initButtons(View rootView) {
+    private void initPlayerControls(View rootView) {
+        mPlayerControls = (LinearLayout)rootView.findViewById(R.id.player_controls);
+        mLoadingText = (TextView)rootView.findViewById(R.id.loading_text);
+
         mPlayButton = (ImageButton)rootView.findViewById(R.id.player_play);
         mPlayButton.setOnClickListener(this);
 
@@ -232,11 +238,14 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
         mNextButton.setOnClickListener(this);
     }
 
-    private void toggleButtonsEnabled(boolean enabled) {
-        mPauseButton.setEnabled(enabled);
-        mPlayButton.setEnabled(enabled);
-        mPreviousButton.setEnabled(enabled);
-        mNextButton.setEnabled(enabled);
+    private void togglePlayerControls(boolean enabled) {
+        if (enabled) {
+            mPlayerControls.setVisibility(View.VISIBLE);
+            mLoadingText.setVisibility(View.GONE);
+        } else {
+            mPlayerControls.setVisibility(View.GONE);
+            mLoadingText.setVisibility(View.VISIBLE);
+        }
     }
 
     private void initTrackViews(View rootView) {
