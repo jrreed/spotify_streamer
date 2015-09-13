@@ -38,7 +38,7 @@ public class TrackPlayerFragment extends Fragment implements View.OnClickListene
     private boolean mPlayerPrepared = false;
     private int mPositionMs = 0;
     private boolean mProgressRenderingAllowed = true;
-    private boolean mShouldPlay = false;
+    private boolean mShouldPlay = true;
     private TrackListItem mTrack = null;
     private int mTrackIndex = -1;
     private ArrayList<TrackListItem> mTrackList = null;
