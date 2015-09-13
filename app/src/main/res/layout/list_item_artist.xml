@@ -11,7 +11,7 @@
         android:id="@+id/list_item_artist_photo"
         android:layout_width="@dimen/list_item_image_dim"
         android:layout_height="@dimen/list_item_image_dim"
-        android:layout_gravity="center_horizontal"
+        android:layout_gravity="center_vertical"
         android:layout_marginRight="@dimen/activity_horizontal_margin"
         android:contentDescription="@string/content_description_artist_photo" />
 

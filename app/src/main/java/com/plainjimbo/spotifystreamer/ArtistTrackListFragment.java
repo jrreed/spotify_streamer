@@ -70,13 +70,17 @@ public class ArtistTrackListFragment extends Fragment implements AdapterView.OnI
         // task again in `onCreate(...)` if there isn't any data.
         if (mCurrentTask != null) {
             mCurrentTask.cancel(true);
-        } else {
+        } else if (mTrackListAdapter != null) {
             savedInstanceState.putParcelableArrayList(BUNDLE_TRACK_LIST, mTrackListAdapter.getTrackList());
         }
     }
 
     private ArtistListItem getArtist() {
-        return getArguments().getParcelable(ARGS_ARTIST);
+        ArtistListItem artist = null;
+        if (getArguments() != null) {
+            artist = getArguments().getParcelable(ARGS_ARTIST);
+        }
+        return artist;
     }
 
     private void initTrackListView(View rootView) {
@@ -86,12 +90,12 @@ public class ArtistTrackListFragment extends Fragment implements AdapterView.OnI
     }
 
     private void initTrackListAdapter(ArrayList<TrackListItem> trackList) {
-        if (trackList == null) {
+        if (trackList != null) {
+            mTrackListAdapter = new TrackListAdapter(getActivity(), trackList);
+        } else if (getArtist() != null) {
             mTrackListAdapter = new TrackListAdapter(getActivity());
             mCurrentTask = new TrackListFetchTask();
             mCurrentTask.execute(getArtist().getId());
-        } else {
-            mTrackListAdapter = new TrackListAdapter(getActivity(), trackList);
         }
     }
 
