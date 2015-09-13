@@ -33,10 +33,12 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
 
     private static final String BUNDLE_ARTIST_LIST = "artistList";
     private static final String BUNDLE_RETRY_QUERY = "retrySearch";
+    private static final String BUNDLE_SELECTION_POSITION = "selectionPosition";
     private ArtistListAdapter mArtistListAdapter = null;
     private ArtistSearchTask mCurrentTask = null;
     private String mRetryQuery = null;
     private Toast mCurrentToast = null;
+    int mSelectedPosition = AdapterView.INVALID_POSITION;
 
     public ArtistSearchFragment() {}
 
@@ -59,7 +61,7 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_artist_search, container, false);
         initSearchField(rootView);
-        initArtistListView(rootView);
+        initArtistListView(rootView, savedInstanceState);
         executeSearch(mRetryQuery);
         return rootView;
     }
@@ -75,6 +77,7 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
             savedInstanceState.putString(BUNDLE_RETRY_QUERY, searchField.getText().toString());
         } else {
             savedInstanceState.putParcelableArrayList(BUNDLE_ARTIST_LIST, mArtistListAdapter.getArtistList());
+            savedInstanceState.putInt(BUNDLE_SELECTION_POSITION, mSelectedPosition);
         }
     }
 
@@ -98,6 +101,7 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         ((OnArtistSelected)getActivity()).onArtistSelected(mArtistListAdapter.getItem(position));
+        mSelectedPosition = position;
     }
 
     private void initSearchField(View rootView) {
@@ -105,10 +109,13 @@ public class ArtistSearchFragment extends Fragment implements TextView.OnEditorA
         searchField.setOnEditorActionListener(this);
     }
 
-    private void initArtistListView(View rootView) {
+    private void initArtistListView(View rootView, Bundle savedInstanceState) {
         ListView artistListView = (ListView) rootView.findViewById(R.id.artist_search_list_view);
         artistListView.setAdapter(mArtistListAdapter);
         artistListView.setOnItemClickListener(this);
+        if (mSelectedPosition != AdapterView.INVALID_POSITION) {
+            artistListView.smoothScrollToPosition(mSelectedPosition);
+        }
     }
 
     private void initArtistListAdapter(ArrayList<ArtistListItem> artistList) {
