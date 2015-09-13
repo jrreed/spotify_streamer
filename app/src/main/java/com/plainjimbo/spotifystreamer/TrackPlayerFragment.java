@@ -17,19 +17,33 @@ import android.widget.Toast;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Created by jamesreed on 9/10/15.
  */
-public class TrackPlayerFragment extends Fragment implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener {
+public class TrackPlayerFragment extends Fragment implements View.OnClickListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener {
+    private static final String BUNDLE_AUTO_PLAY = "autoPlay";
     private static final String BUNDLE_POSITION = "position";
+    private static final String BUNDLE_TRACK_INDEX = "trackIndex";
     private ArtistListItem mArtist = null;
     private Toast mCurrentToast = null;
     private MediaPlayer mPlayer = null;
     private boolean mPlayerPrepared = false;
     private int mPosition = 0;
+    private boolean mShouldPlay = false;
     private TrackListItem mTrack = null;
+    private int mTrackIndex = -1;
+    private ArrayList<TrackListItem> mTrackList = null;
 
+    // Track data views
+    TextView artistNameView =null;
+    TextView albumNameView = null;
+    ImageView albumPhotoView = null;
+    TextView trackNameView = null;
+    TextView trackDurationView = null;
+
+    // Buttons
     private ImageButton mPauseButton = null;
     private ImageButton mPlayButton = null;
     private ImageButton mPreviousButton = null;
@@ -41,13 +55,11 @@ public class TrackPlayerFragment extends Fragment implements MediaPlayer.OnPrepa
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Intent intent = getActivity().getIntent();
-        if (intent.hasExtra(TrackPlayerActivity.EXTRA_ARTIST) && intent.hasExtra(TrackPlayerActivity.EXTRA_TRACK)) {
-            mArtist = intent.getParcelableExtra(TrackPlayerActivity.EXTRA_ARTIST);
-            mTrack = intent.getParcelableExtra(TrackPlayerActivity.EXTRA_TRACK);
+        if (canInitFragmentData()) {
+            initFragmentData();
         }
-        if (savedInstanceState != null && savedInstanceState.containsKey(BUNDLE_POSITION)) {
-            mPosition = savedInstanceState.getInt(BUNDLE_POSITION);
+        if (savedInstanceState != null) {
+            restoreInstanceState(savedInstanceState);
         }
     }
 
@@ -56,15 +68,9 @@ public class TrackPlayerFragment extends Fragment implements MediaPlayer.OnPrepa
                              Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
         View rootView = inflater.inflate(R.layout.fragment_track_player, container, false);
-        renderArtistName(rootView, mArtist.getName());
-        renderAlbumName(rootView, mTrack.getAlbumName());
-        renderAlbumPhoto(rootView, mTrack.getWallpaperImageUrl());
-        renderTrackName(rootView, mTrack.getName());
-        renderTrackDuration(rootView, mTrack.getDuration());
-        initPlayButton(rootView);
-        initPauseButton(rootView);
-        initPreviousButton(rootView);
-        initNextButton(rootView);
+        initButtons(rootView);
+        initTrackViews(rootView);
+        renderTrack();
         return rootView;
     }
 
@@ -74,12 +80,90 @@ public class TrackPlayerFragment extends Fragment implements MediaPlayer.OnPrepa
         initPlayer();
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        if (playerPrepared()) {
+            mPosition = mPlayer.getCurrentPosition();
+        }
+        savedInstanceState.putInt(BUNDLE_POSITION, mPosition);
+        savedInstanceState.putBoolean(BUNDLE_AUTO_PLAY, mShouldPlay);
+        savedInstanceState.putInt(BUNDLE_TRACK_INDEX, mTrackIndex);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        boolean shouldPlayWas = mShouldPlay;
+        if (playerPrepared()) {
+            mPosition = mPlayer.getCurrentPosition();
+        }
+        destroyPlayer();
+        mShouldPlay = shouldPlayWas;
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch(view.getId()) {
+            case R.id.player_play:
+                play();
+                break;
+            case R.id.player_pause:
+                pause();
+                break;
+            case R.id.player_previous:
+                previous();
+                break;
+            case R.id.player_next:
+                next();
+                break;
+        }
+    }
+
+    private boolean canInitFragmentData() {
+        Intent intent = getActivity().getIntent();
+        return intent.hasExtra(TrackPlayerActivity.EXTRA_ARTIST) &&
+                intent.hasExtra(TrackPlayerActivity.EXTRA_TRACK_INDEX) &&
+                intent.hasExtra(TrackPlayerActivity.EXTRA_TRACK_LIST);
+    }
+
+    private void initFragmentData() {
+        Intent intent = getActivity().getIntent();
+        mArtist = intent.getParcelableExtra(TrackPlayerActivity.EXTRA_ARTIST);
+        mTrackList = intent.getParcelableArrayListExtra(TrackPlayerActivity.EXTRA_TRACK_LIST);
+        setTrack(intent.getIntExtra(TrackPlayerActivity.EXTRA_TRACK_INDEX, -1));
+    }
+
+    private void setTrack(int trackIndex) {
+        mTrackIndex = trackIndex;
+        mTrack = mTrackList.get(mTrackIndex);
+    }
+
+    private boolean canRestoreInstanceState(Bundle savedInstanceState) {
+        return savedInstanceState.containsKey(BUNDLE_TRACK_INDEX);
+    }
+
+    private void restoreInstanceState(Bundle savedInstanceState) {
+        if (canRestoreInstanceState(savedInstanceState)) {
+            // Optional data
+            if (savedInstanceState.containsKey(BUNDLE_POSITION)) {
+                mPosition = savedInstanceState.getInt(BUNDLE_POSITION);
+            }
+            if (savedInstanceState.containsKey(BUNDLE_AUTO_PLAY)) {
+                mShouldPlay = savedInstanceState.getBoolean(BUNDLE_AUTO_PLAY);
+            }
+            setTrack(savedInstanceState.getInt(TrackPlayerActivity.EXTRA_TRACK_INDEX, -1));
+        }
+    }
+
     private void initPlayer() {
         mPlayerPrepared = false;
-        mPlayer = new MediaPlayer();
-        mPlayer.setOnErrorListener(this);
-        mPlayer.setOnPreparedListener(this);
-        mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        if (mPlayer == null) {
+            createPlayer();
+        }
+        else {
+            mPlayer.reset();
+        }
         try {
             mPlayer.setDataSource(mTrack.getPreviewUrl());
         } catch (IOException exc) {
@@ -87,7 +171,16 @@ public class TrackPlayerFragment extends Fragment implements MediaPlayer.OnPrepa
         }
         mPlayer.prepareAsync();
         toggleButtonsEnabled(false);
-        pause();
+        if (!mShouldPlay) {
+            pause();
+        }
+    }
+
+    private void createPlayer() {
+        mPlayer = new MediaPlayer();
+        mPlayer.setOnErrorListener(this);
+        mPlayer.setOnPreparedListener(this);
+        mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
     }
 
     @Override
@@ -96,6 +189,9 @@ public class TrackPlayerFragment extends Fragment implements MediaPlayer.OnPrepa
         toggleButtonsEnabled(true);
         if (mPosition > 0) {
             mPlayer.seekTo(mPosition);
+        }
+        if (mShouldPlay) {
+            play();
         }
     }
 
@@ -116,33 +212,41 @@ public class TrackPlayerFragment extends Fragment implements MediaPlayer.OnPrepa
         toggleButtonsEnabled(false);
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        super.onSaveInstanceState(savedInstanceState);
-        if (playerPrepared()) {
-            mPosition = mPlayer.getCurrentPosition();
-        }
-        savedInstanceState.putInt(BUNDLE_POSITION, mPosition);
+    private void initButtons(View rootView) {
+        mPlayButton = (ImageButton)rootView.findViewById(R.id.player_play);
+        mPlayButton.setOnClickListener(this);
+
+        mPauseButton = (ImageButton)rootView.findViewById(R.id.player_pause);
+        mPauseButton.setOnClickListener(this);
+
+        mPreviousButton = (ImageButton)rootView.findViewById(R.id.player_previous);
+        mPreviousButton.setOnClickListener(this);
+
+        mNextButton = (ImageButton)rootView.findViewById(R.id.player_next);
+        mNextButton.setOnClickListener(this);
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        destroyPlayer();
+    private void toggleButtonsEnabled(boolean enabled) {
+        mPauseButton.setEnabled(enabled);
+        mPlayButton.setEnabled(enabled);
+        mPreviousButton.setEnabled(enabled);
+        mNextButton.setEnabled(enabled);
     }
 
-    private void renderArtistName(View root, String artistName) {
-        TextView artistNameView = (TextView)root.findViewById(R.id.artist_name);
-        artistNameView.setText(artistName);
+    private void initTrackViews(View rootView) {
+        artistNameView =(TextView)rootView.findViewById(R.id.artist_name);
+        albumNameView = (TextView)rootView.findViewById(R.id.album_name);
+        albumPhotoView = (ImageView)rootView.findViewById(R.id.album_photo);
+        trackNameView = (TextView)rootView.findViewById(R.id.track_name);
+        trackDurationView = (TextView)rootView.findViewById(R.id.track_duration);
     }
 
-    private void renderAlbumName(View root, String albumName) {
-        TextView albumNameView = (TextView)root.findViewById(R.id.album_name);
-        albumNameView.setText(albumName);
-    }
-
-    private void renderAlbumPhoto(View root, String imageUrl) {
-        ImageView albumPhotoView = (ImageView)root.findViewById(R.id.album_photo);
+    private void renderTrack() {
+        String imageUrl = mTrack.getWallpaperImageUrl();
+        artistNameView.setText(mArtist.getName());
+        albumNameView.setText(mTrack.getAlbumName());
+        trackNameView.setText(mTrack.getName());
+        trackDurationView.setText(millisToTimeString(mTrack.getDuration()));
         if (imageUrl != null) {
             albumPhotoView.setBackgroundColor(Color.TRANSPARENT);
             Picasso.with(getActivity())
@@ -156,33 +260,14 @@ public class TrackPlayerFragment extends Fragment implements MediaPlayer.OnPrepa
         }
     }
 
-    private void renderTrackName(View root, String trackName) {
-        TextView trackNameView = (TextView)root.findViewById(R.id.track_name);
-        trackNameView.setText(trackName);
-    }
-
-    private void renderTrackDuration(View root, long duration) {
-        TextView trackDurationView = (TextView)root.findViewById(R.id.track_duration);
-        trackDurationView.setText(millisToTimeString(duration));
-    }
-
     private String millisToTimeString(long millis) {
         long seconds = (millis / 10000) % 60;
         long minutes = (millis / (1000*60)) % 60;
         return String.format("%01d:%02d", minutes, seconds);
     }
 
-    private void initPlayButton(View root) {
-        mPlayButton = (ImageButton)root.findViewById(R.id.player_play);
-        mPlayButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                play();
-            }
-        });
-    }
-
     private void play() {
+        mShouldPlay = true;
         mPlayButton.setVisibility(View.GONE);
         mPauseButton.setVisibility(View.VISIBLE);
         if (playerPrepared()) {
@@ -190,17 +275,8 @@ public class TrackPlayerFragment extends Fragment implements MediaPlayer.OnPrepa
         }
     }
 
-    private void initPauseButton(View root) {
-        mPauseButton = (ImageButton)root.findViewById(R.id.player_pause);
-        mPauseButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                pause();
-            }
-        });
-    }
-
     private void pause() {
+        mShouldPlay = false;
         mPauseButton.setVisibility(View.GONE);
         mPlayButton.setVisibility(View.VISIBLE);
         if (playerPrepared()) {
@@ -208,41 +284,20 @@ public class TrackPlayerFragment extends Fragment implements MediaPlayer.OnPrepa
         }
     }
 
-    private void initPreviousButton(View root) {
-        mPreviousButton = (ImageButton)root.findViewById(R.id.player_previous);
-        mPreviousButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                previous();
-            }
-        });
-    }
-
     private void previous() {
-        // TODO
-        makeToast("PREVIOUS BUTTON CLICKED");
-    }
-
-    private void initNextButton(View root) {
-        mNextButton = (ImageButton)root.findViewById(R.id.player_next);
-        mNextButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                next();
-            }
-        });
+        if (mTrackIndex > 0) {
+            setTrack(mTrackIndex - 1);
+            renderTrack();
+            initPlayer();
+        }
     }
 
     private void next() {
-        // TODO
-        makeToast("NEXT BUTTON CLICKED");
-    }
-
-    private void toggleButtonsEnabled(boolean enabled) {
-        mPauseButton.setEnabled(enabled);
-        mPlayButton.setEnabled(enabled);
-        mPreviousButton.setEnabled(enabled);
-        mNextButton.setEnabled(enabled);
+        if (mTrackIndex < mTrackList.size() - 1) {
+            setTrack(mTrackIndex + 1);
+            renderTrack();
+            initPlayer();
+        }
     }
 
     private boolean playerPrepared() {

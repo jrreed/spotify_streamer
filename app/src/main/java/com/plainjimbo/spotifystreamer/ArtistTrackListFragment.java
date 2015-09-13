@@ -105,7 +105,8 @@ public class ArtistTrackListFragment extends Fragment implements AdapterView.OnI
         TrackListItem track = mTrackListAdapter.getItem(position);
         Intent intent = new Intent(getActivity(), TrackPlayerActivity.class);
         intent.putExtra(TrackPlayerActivity.EXTRA_ARTIST, mArtist);
-        intent.putExtra(TrackPlayerActivity.EXTRA_TRACK, track);
+        intent.putExtra(TrackPlayerActivity.EXTRA_TRACK_INDEX, position);
+        intent.putExtra(TrackPlayerActivity.EXTRA_TRACK_LIST, mTrackListAdapter.getTrackList());
         startActivity(intent);
     }
 
