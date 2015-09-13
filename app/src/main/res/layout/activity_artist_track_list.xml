@@ -1,7 +1,7 @@
-<fragment xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/artist_track_list_fragment"
-    android:name="com.plainjimbo.spotifystreamer.ArtistTrackListFragment"
+    android:id="@+id/artist_track_list_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:layout="@layout/fragment_artist_track_list" />
+    tools:context="com.plainjimbo.spotifystreamer.ArtistTrackListActivity"
+    tools:ignore="MergeRootFrame" />
