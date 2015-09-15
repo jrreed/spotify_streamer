@@ -1,5 +1,5 @@
 # Spotify Streamer #
-This is the app for the first and second projects in the Udacity Android Nanodegree program. It is an app that lets users search for musicians in Spotify, see their top tracks, and listen to 30-second previews. It makes use of the Spotify API for all of its data and audio streams.
+This is the app for the first and second projects in the Udacity Android Nanodegree program. It is an app that lets users search for musicians in Spotify, see their top songs, and listen to 30-second previews. It makes use of the Spotify API for all of its data and audio streams.
 
 
 ## Phones ##
@@ -19,7 +19,7 @@ After tapping on an artist from the Artist Search activity the app will display 
 
 
 ### Song Playback ###
-After tapping on a song the app will render all the information it has about the song in an audio player. The player allows the user to start and stop playback of a 30-second preview of the app as well as skip to the next or previous track in the Top Songs list.
+After tapping on a song the app will render all the information it has about the song in an audio player. The player allows the user to start and stop playback of a 30-second preview of the song, skip to the next or previous song in the Top Songs list, and provides a scrub-bar to let the user scrub the playback position.
 
 ![spotify_streamer track player activity screenshot](https://github.com/jrreed/spotify_streamer/blob/master/screenshots/spotify_streamer_track_player_260x462.png)
 
