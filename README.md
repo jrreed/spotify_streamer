@@ -25,7 +25,7 @@ After tapping on a song the app will render all the information it has about the
 
 
 ## Tablets ##
-For tablets the app combines a Master Detail with a Dialog fragment to achieve the same functionality as the phone.
+For tablets the app combines a Master Detail Flow with a Dialog Fragment to achieve the same functionality as the phone.
 
 ![spotify_streamer tablet artist and tracks master detail flow screenshot](https://github.com/jrreed/spotify_streamer/blob/master/screenshots/spotify_streamer_tablet_master_detail_flow_520x693.png)
 ![spotify_streamer tablet playback activity screenshot](https://github.com/jrreed/spotify_streamer/blob/master/screenshots/spotify_streamer_tablet_playback_520x693.png)
